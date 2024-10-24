@@ -22,18 +22,19 @@ const registerUser = async (req, res) => {
         const [existingUsers] = await pool.query(checkQuery, [TenDangNhap, Email]);
 
         if (existingUsers.length > 0) {
-            return res.status(400).json({ message: 'Tên đăng nhập hoặc email đã tồn tại.' });
+            return res.status(201).json({ status: 'warning', message: 'Tên đăng nhập hoặc email đã tồn tại.' });
         }
 
         // Nếu không tồn tại, thêm người dùng mới
         const insertQuery = 'INSERT INTO NguoiDung (TenDangNhap, MatKhau, Email, DiaChi, SoDienThoai) VALUES (?, ?, ?, ?, ?)';
         const [result] = await pool.query(insertQuery, [TenDangNhap, MatKhau, Email, DiaChi, SoDienThoai]);
 
-        res.status(201).json({ message: 'Người dùng đã được tạo thành công!', userId: result.insertId });
+        res.status(200).json({ status: 'success', message: 'Người dùng đã được tạo thành công!', userId: result.insertId });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 // Đăng nhập người dùng
 const loginUser = async (req, res) => {
@@ -46,7 +47,7 @@ const loginUser = async (req, res) => {
 
         if (results.length === 0) {
             // Tên đăng nhập hoặc email không tồn tại
-            return res.status(400).json({ message: 'Tên đăng nhập hoặc email không tồn tại.' });
+            return res.status(201).json({ status: 'warning', message: 'Tên đăng nhập hoặc email không tồn tại.' });
         }
 
         const user = results[0];
@@ -54,19 +55,20 @@ const loginUser = async (req, res) => {
         // Kiểm tra mật khẩu
         if (MatKhau !== user.MatKhau) {
             // Mật khẩu không chính xác
-            return res.status(401).json({ message: 'Mật khẩu không chính xác.' });
+            return res.status(201).json({ status: 'warning', message: 'Mật khẩu không chính xác.' });
         }
 
         // Lưu thông tin người dùng vào session (nếu cần thiết)
         req.session.userId = user.NguoiDungId;
 
         // Trả về thông báo đăng nhập thành công
-        res.json({ message: 'Đăng nhập thành công!', userId: user.NguoiDungId });
+        res.status(200).json({ status: 'success', message: 'Đăng nhập thành công!', userId: user.NguoiDungId });
     } catch (error) {
         // Xử lý lỗi và trả về mã lỗi 500 cho các lỗi không lường trước
         res.status(500).json({ error: error.message });
     }
 };
+
 // Xóa người dùng
 const deleteUser = async (req, res) => {
     const { nguoiDungId } = req.params; // Lấy nguoiDungId từ tham số URL
@@ -77,18 +79,19 @@ const deleteUser = async (req, res) => {
         const [existingUsers] = await pool.query(checkQuery, [nguoiDungId]);
 
         if (existingUsers.length === 0) {
-            return res.status(404).json({ message: 'Người dùng không tồn tại.' });
+            return res.status(201).json({ status: 'warning', message: 'Người dùng không tồn tại.' });
         }
 
         // Xóa người dùng
         const deleteQuery = 'DELETE FROM NguoiDung WHERE NguoiDungId = ?';
         await pool.query(deleteQuery, [nguoiDungId]);
 
-        res.json({ message: 'Người dùng đã được xóa thành công!' });
+        res.status(200).json({ status: 'success', message: 'Người dùng đã được xóa thành công!' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 // Sửa thông tin người dùng
 const updateUser = async (req, res) => {
@@ -101,22 +104,22 @@ const updateUser = async (req, res) => {
         const [existingUsers] = await pool.query(checkQuery, [nguoiDungId]);
 
         if (existingUsers.length === 0) {
-            return res.status(404).json({ message: 'Người dùng không tồn tại.' });
+            return res.status(201).json({ status: 'warning', message: 'Người dùng không tồn tại.' });
         }
 
-        // Kiểm tra tên đăng nhập và email có tồn tại hay không
+        // Kiểm tra tên đăng nhập và email có trùng lặp không
         const checkDuplicateQuery = 'SELECT * FROM NguoiDung WHERE (TenDangNhap = ? OR Email = ?) AND NguoiDungId != ?';
         const [duplicateUsers] = await pool.query(checkDuplicateQuery, [TenDangNhap, Email, nguoiDungId]);
 
         if (duplicateUsers.length > 0) {
-            return res.status(400).json({ message: 'Tên đăng nhập hoặc email đã tồn tại.' });
+            return res.status(201).json({ status: 'warning', message: 'Tên đăng nhập hoặc email đã tồn tại.' });
         }
 
         // Cập nhật thông tin người dùng
         const updateQuery = 'UPDATE NguoiDung SET TenDangNhap = ?, Email = ?, DiaChi = ?, SoDienThoai = ? WHERE NguoiDungId = ?';
         await pool.query(updateQuery, [TenDangNhap, Email, DiaChi, SoDienThoai, nguoiDungId]);
 
-        res.json({ message: 'Thông tin người dùng đã được cập nhật thành công!' });
+        res.status(200).json({ status: 'success', message: 'Thông tin người dùng đã được cập nhật thành công!' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

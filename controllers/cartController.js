@@ -11,7 +11,7 @@ const postcartProducts = async (req, res) => {
         // Kiểm tra xem sản phẩm có tồn tại không
         const [productCheck] = await pool.query('SELECT * FROM SanPham WHERE SanPhamId = ?', [SanPhamId]);
         if (productCheck.length === 0) {
-            return res.status(404).json({ message: 'Sản phẩm không tồn tại.' });
+            return res.status(201).json({ message: 'Sản phẩm không tồn tại.', status: 'warning' });
         }
 
         // Kiểm tra tồn kho
@@ -59,11 +59,12 @@ const postcartProducts = async (req, res) => {
             );
         }
 
-        res.status(201).json({ message: 'Sản phẩm đã được thêm vào giỏ hàng thành công!' });
+        res.status(200).json({ message: 'Sản phẩm đã được thêm vào giỏ hàng thành công!', status: 'success' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 const deleteCartProduct = async (req, res) => {
     const { SanPhamId } = req.body;
@@ -78,7 +79,7 @@ const deleteCartProduct = async (req, res) => {
         );
 
         if (cart.length === 0) {
-            return res.status(404).json({ message: 'Không tìm thấy giỏ hàng.' });
+            return res.status(201).json({ message: 'Không tìm thấy giỏ hàng.', status: 'warning' });
         }
 
         const GioHangId = cart[0].GioHangId;
@@ -90,7 +91,7 @@ const deleteCartProduct = async (req, res) => {
         );
 
         if (existingProduct.length === 0) {
-            return res.status(404).json({ message: 'Sản phẩm không có trong giỏ hàng.' });
+            return res.status(201).json({ message: 'Sản phẩm không có trong giỏ hàng.', status: 'warning' });
         }
 
         // Xóa sản phẩm khỏi giỏ hàng
@@ -99,11 +100,12 @@ const deleteCartProduct = async (req, res) => {
             [GioHangId, SanPhamId]
         );
 
-        res.status(200).json({ message: 'Sản phẩm đã bị xóa khỏi giỏ hàng thành công.' });
+        res.status(200).json({ message: 'Sản phẩm đã bị xóa khỏi giỏ hàng thành công!', status: 'success' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 const getCart = async (req, res) => {
     const NguoiDungId = req.session.userId || null; // Nếu người dùng đã đăng nhập
@@ -117,7 +119,7 @@ const getCart = async (req, res) => {
         );
 
         if (cart.length === 0) {
-            return res.status(404).json({ message: 'Giỏ hàng trống.' });
+            return res.status(201).json({ message: 'Giỏ hàng trống.', status: 'warning' });
         }
 
         const GioHangId = cart[0].GioHangId;
@@ -141,7 +143,7 @@ const getCart = async (req, res) => {
         );
 
         if (cartDetails.length === 0) {
-            return res.status(404).json({ message: 'Giỏ hàng trống.' });
+            return res.status(201).json({ message: 'Giỏ hàng trống.', status: 'warning' });
         }
 
         // Chuyển đổi chuỗi hình ảnh thành mảng
@@ -153,12 +155,14 @@ const getCart = async (req, res) => {
         // Trả về thông tin giỏ hàng
         res.status(200).json({
             message: 'Giỏ hàng hiện tại của bạn:',
-            cart: cartWithImages
+            cart: cartWithImages,
+            status: 'success'
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 
 

@@ -29,7 +29,7 @@ const postkhoWithProducts = async (req, res) => {
 
         // Nếu sản phẩm đã tồn tại, không thêm kho mới
         if (productResults.length > 0) {
-            return res.status(400).json({ message: 'Sản phẩm đã tồn tại, không thể thêm kho mới.' });
+            return res.status(201).json({ status: 'warning', message: 'Sản phẩm đã tồn tại, không thể thêm kho mới.' });
         }
 
         // Nếu sản phẩm không tồn tại, thêm kho mới
@@ -38,56 +38,57 @@ const postkhoWithProducts = async (req, res) => {
             [SanPhamId, SoLuong, DiaDiem]
         );
 
-        res.status(201).json({ message: 'Kho đã được thêm thành công!', khoId: results.insertId });
+        res.status(200).json({ status: 'success', message: 'Kho đã được thêm thành công!', khoId: results.insertId });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
+
 const putkhoWithProducts = async (req, res) => {
-    const { id } = req.params; // ID kho
-    const { SoLuong, DiaDiem } = req.body;
+    const { id } = req.params; // ID của kho từ URL
+    const { SoLuong, DiaDiem } = req.body; // Thông tin cần cập nhật từ body
 
     try {
         // Kiểm tra xem kho có tồn tại không
         const [khoResults] = await pool.query('SELECT * FROM Kho WHERE KhoId = ?', [id]);
         if (khoResults.length === 0) {
-            return res.status(404).json({ message: 'Kho không tồn tại.' });
+            return res.status(201).json({ message: 'Kho không tồn tại.', status: 'warning' });
         }
 
-        // Kiểm tra xem sản phẩm có tồn tại không
+        // Kiểm tra xem sản phẩm liên kết với kho có tồn tại không
         const [productResults] = await pool.query('SELECT * FROM SanPham WHERE SanPhamId = ?', [khoResults[0].SanPhamId]);
         if (productResults.length === 0) {
-            return res.status(404).json({ message: 'Sản phẩm liên kết với kho không tồn tại.' });
+            return res.status(201).json({ message: 'Sản phẩm liên kết với kho không tồn tại.', status: 'warning' });
         }
 
         // Cập nhật kho
-        const [results] = await pool.query(
+        await pool.query(
             'UPDATE Kho SET SoLuong = ?, DiaDiem = ? WHERE KhoId = ?',
             [SoLuong, DiaDiem, id]
         );
 
-        res.json({ message: 'Kho đã được cập nhật thành công!' });
+        res.status(200).json({ message: 'Kho đã được cập nhật thành công!', status: 'success' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-// Xóa kho
+
 const deletekhoWithProducts = async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.params; // Lấy ID của kho từ tham số URL
 
     try {
         // Kiểm tra xem kho có tồn tại không
         const [khoResults] = await pool.query('SELECT * FROM Kho WHERE KhoId = ?', [id]);
         if (khoResults.length === 0) {
-            return res.status(404).json({ message: 'Kho không tồn tại.' });
+            return res.status(201).json({ message: 'Kho không tồn tại.', status: 'warning' });
         }
 
-        // Kiểm tra xem sản phẩm có tồn tại không
+        // Kiểm tra xem sản phẩm liên kết với kho có tồn tại không
         const [productResults] = await pool.query('SELECT * FROM SanPham WHERE SanPhamId = ?', [khoResults[0].SanPhamId]);
         if (productResults.length === 0) {
-            return res.status(404).json({ message: 'Sản phẩm liên kết với kho không tồn tại.' });
+            return res.status(201).json({ message: 'Sản phẩm liên kết với kho không tồn tại.', status: 'warning' });
         }
 
         // Xóa kho
@@ -95,14 +96,17 @@ const deletekhoWithProducts = async (req, res) => {
             'DELETE FROM Kho WHERE KhoId = ?',
             [id]
         );
+
         if (results.affectedRows === 0) {
-            return res.status(404).json({ message: 'Kho không tồn tại.' });
+            return res.status(201).json({ message: 'Kho không tồn tại.', status: 'warning' });
         }
-        res.json({ message: 'Kho đã được xóa thành công!' });
+
+        res.status(200).json({ message: 'Kho đã được xóa thành công!', status: 'success' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 
 module.exports = { getkhoWithProducts , postkhoWithProducts , putkhoWithProducts , deletekhoWithProducts};

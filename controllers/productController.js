@@ -57,7 +57,7 @@ const postproduct = async (req, res) => {
         // Kiểm tra xem sản phẩm đã tồn tại hay chưa
         const [existingProducts] = await pool.query('SELECT * FROM SanPham WHERE TenSanPham = ?', [TenSanPham]);
         if (existingProducts.length > 0) {
-            return res.status(400).json({ message: 'Sản phẩm đã tồn tại.' });
+            return res.status(201).json({ message: 'Sản phẩm đã tồn tại.', status: 'warning' });
         }
 
         // Thêm sản phẩm
@@ -75,11 +75,12 @@ const postproduct = async (req, res) => {
         // Xử lý các promise để thêm tất cả hình ảnh
         await Promise.all(hinhAnhQueries);
 
-        res.status(201).json({ message: 'Sản phẩm đã được tạo thành công!', sanPhamId });
+        res.status(200).json({ message: 'Sản phẩm đã được tạo thành công!', sanPhamId, status: 'success' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 // Sửa sản phẩm
 const putproduct = async (req, res) => {
     const { id } = req.params;
@@ -93,7 +94,7 @@ const putproduct = async (req, res) => {
         );
 
         if (existingProduct.length > 0) {
-            return res.status(400).json({ message: 'Tên sản phẩm đã tồn tại.' });
+            return res.status(201).json({ message: 'Tên sản phẩm đã tồn tại.', status: 'warning' });
         }
 
         // Cập nhật sản phẩm
@@ -118,17 +119,24 @@ const putproduct = async (req, res) => {
             await Promise.all(hinhAnhQueries);
         }
 
-        res.json({ message: 'Sản phẩm đã được cập nhật thành công!' });
+        res.status(200).json({ message: 'Sản phẩm đã được cập nhật thành công!', status: 'success' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 // Xóa sản phẩm
 const deleteproduct = async (req, res) => {
     const { id } = req.params;
 
     try {
+        // Kiểm tra sản phẩm có tồn tại không
+        const [productResults] = await pool.query('SELECT * FROM SanPham WHERE SanPhamId = ?', [id]);
+        if (productResults.length === 0) {
+            return res.status(201).json({ message: 'Sản phẩm không tồn tại.', status: 'warning' });
+        }
+
         // Xóa hình ảnh liên quan
         await pool.query('DELETE FROM HinhAnhSanPham WHERE SanPhamId = ?', [id]);
 
@@ -139,11 +147,12 @@ const deleteproduct = async (req, res) => {
             return res.status(404).json({ message: 'Sản phẩm không tồn tại.' });
         }
 
-        res.json({ message: 'Sản phẩm đã được xóa thành công!' });
+        res.status(200).json({ message: 'Sản phẩm đã được xóa thành công!', status: 'success' });
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
 };
+
 
 
 module.exports = { getproduct, postproduct , putproduct , deleteproduct};
