@@ -1,5 +1,5 @@
 // controllers/userController.js
-
+const UserService = require('../services/userService');
 const pool = require('../config/database');
 
 // Lấy danh sách người dùng từ cơ sở dữ liệu
@@ -37,37 +37,46 @@ const registerUser = async (req, res) => {
 
 
 // Đăng nhập người dùng
+// const loginUser = async (req, res) => {
+//     const { TenDangNhap, MatKhau } = req.body;
+
+//     try {
+//         // Kiểm tra tên đăng nhập hoặc email
+//         const query = 'SELECT * FROM NguoiDung WHERE TenDangNhap = ? OR Email = ?';
+//         const [results] = await pool.query(query, [TenDangNhap, TenDangNhap]);
+
+//         if (results.length === 0) {
+//             // Tên đăng nhập hoặc email không tồn tại
+//             return res.status(201).json({ status: 'warning', message: 'Tên đăng nhập hoặc email không tồn tại.' });
+//         }
+
+//         const user = results[0];
+
+//         // Kiểm tra mật khẩu
+//         if (MatKhau !== user.MatKhau) {
+//             // Mật khẩu không chính xác
+//             return res.status(201).json({ status: 'warning', message: 'Mật khẩu không chính xác.' });
+//         }
+
+//         // Lưu thông tin người dùng vào session (nếu cần thiết)
+//         req.session.userId = user.NguoiDungId;
+
+//         // Trả về thông báo đăng nhập thành công
+//         res.status(200).json({ status: 'success', message: 'Đăng nhập thành công!', userId: user.NguoiDungId });
+//     } catch (error) {
+//         // Xử lý lỗi và trả về mã lỗi 500 cho các lỗi không lường trước
+//         res.status(500).json({ error: error.message });
+//     }
+// };
 const loginUser = async (req, res) => {
-    const { TenDangNhap, MatKhau } = req.body;
-
     try {
-        // Kiểm tra tên đăng nhập hoặc email
-        const query = 'SELECT * FROM NguoiDung WHERE TenDangNhap = ? OR Email = ?';
-        const [results] = await pool.query(query, [TenDangNhap, TenDangNhap]);
-
-        if (results.length === 0) {
-            // Tên đăng nhập hoặc email không tồn tại
-            return res.status(201).json({ status: 'warning', message: 'Tên đăng nhập hoặc email không tồn tại.' });
-        }
-
-        const user = results[0];
-
-        // Kiểm tra mật khẩu
-        if (MatKhau !== user.MatKhau) {
-            // Mật khẩu không chính xác
-            return res.status(201).json({ status: 'warning', message: 'Mật khẩu không chính xác.' });
-        }
-
-        // Lưu thông tin người dùng vào session (nếu cần thiết)
-        req.session.userId = user.NguoiDungId;
-
-        // Trả về thông báo đăng nhập thành công
-        res.status(200).json({ status: 'success', message: 'Đăng nhập thành công!', userId: user.NguoiDungId });
+      const token = await UserService.login(req.body);
+      return res.status(200).json({ token });
     } catch (error) {
-        // Xử lý lỗi và trả về mã lỗi 500 cho các lỗi không lường trước
-        res.status(500).json({ error: error.message });
+      return res.status(400).json({ message: error.message });
     }
-};
+  };
+
 
 // Xóa người dùng
 const deleteUser = async (req, res) => {

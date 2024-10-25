@@ -4,6 +4,10 @@ const MySQLStore = require('express-mysql-session')(session); // Đảm bảo d�
 const pool = require('./config/database'); // Kết nối tới MySQL pool
 require('dotenv').config();
 
+
+
+
+const errorMiddleware = require('./middlewares/errorMiddleware');
 const app = express();
 
 app.use(express.json());
@@ -49,4 +53,5 @@ app.get('/', (req, res) => {
   res.send('Xin chào, đây là server Node.js của bạn!');
 });
 
+app.use(errorMiddleware);
 module.exports = app;

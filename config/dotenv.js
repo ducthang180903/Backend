@@ -1,5 +1,6 @@
+require('dotenv').config();
 
-PORT=3000
+PORT=3001
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=
