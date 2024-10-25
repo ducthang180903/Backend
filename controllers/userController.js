@@ -24,15 +24,42 @@ const registerUser = async (req, res) => {
 };
 
 
-// Đăng nhập người dùng
+
+// Controller loginUser
 const loginUser = async (req, res) => {
     try {
-      const token = await UserService.login(req.body);
-      return res.status(200).json({ token });
+        // Gọi hàm login từ UserService để xác thực người dùng
+        const user = await UserService.login(req.body);
+
+        // Kiểm tra xem user có hợp lệ không
+        if (!user || !user.NguoiDungId) {
+            throw new Error('Không tìm thấy thông tin người dùng.');
+        }
+
+        // Lưu thông tin người dùng vào session
+        req.session.user = {
+            NguoiDungId: user.NguoiDungId,
+            TenDangNhap: user.TenDangNhap,
+            Email: user.Email,
+            DiaChi: user.DiaChi,
+            SoDienThoai: user.SoDienThoai,
+            VaiTro: user.VaiTro,
+            ThoiGianTao: user.ThoiGianTao
+        };
+
+        // Trả về thông báo thành công và thông tin người dùng
+        return res.status(200).json({ 
+            message: 'Đăng nhập thành công!', 
+            user: req.session.user // Trả về thông tin người dùng từ session
+        });
     } catch (error) {
-      return res.status(400).json({ message:'lỗi' });
+        console.error('Lỗi khi đăng nhập:', error); // Log lỗi
+        return res.status(400).json({ message: error.message });
     }
-  };
+};
+
+
+
 
 // Xóa người dùng
 const deleteUser = async (req, res) => {
@@ -47,40 +74,6 @@ const deleteUser = async (req, res) => {
 };
 
 
-
-
-
-// Sửa thông tin người dùng
-// const updateUser = async (req, res) => {
-//     const { nguoiDungId } = req.params; // Lấy nguoiDungId từ tham số URL
-//     const { TenDangNhap, Email, DiaChi, SoDienThoai } = req.body; // Lấy thông tin mới từ body
-
-//     try {
-//         // Kiểm tra xem người dùng có tồn tại không
-//         const checkQuery = 'SELECT * FROM NguoiDung WHERE NguoiDungId = ?';
-//         const [existingUsers] = await pool.query(checkQuery, [nguoiDungId]);
-
-//         if (existingUsers.length === 0) {
-//             return res.status(201).json({ status: 'warning', message: 'Người dùng không tồn tại.' });
-//         }
-
-//         // Kiểm tra tên đăng nhập và email có trùng lặp không
-//         const checkDuplicateQuery = 'SELECT * FROM NguoiDung WHERE (TenDangNhap = ? OR Email = ?) AND NguoiDungId != ?';
-//         const [duplicateUsers] = await pool.query(checkDuplicateQuery, [TenDangNhap, Email, nguoiDungId]);
-
-//         if (duplicateUsers.length > 0) {
-//             return res.status(201).json({ status: 'warning', message: 'Tên đăng nhập hoặc email đã tồn tại.' });
-//         }
-
-//         // Cập nhật thông tin người dùng
-//         const updateQuery = 'UPDATE NguoiDung SET TenDangNhap = ?, Email = ?, DiaChi = ?, SoDienThoai = ? WHERE NguoiDungId = ?';
-//         await pool.query(updateQuery, [TenDangNhap, Email, DiaChi, SoDienThoai, nguoiDungId]);
-
-//         res.status(200).json({ status: 'success', message: 'Thông tin người dùng đã được cập nhật thành công!' });
-//     } catch (error) {
-//         res.status(500).json({ error: error.message });
-//     }
-// };
 
 // Cập nhật người dùng
 const updateUser = async (req, res) => {

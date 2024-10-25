@@ -1,4 +1,5 @@
 const express = require('express');
+
 const { getkhoWithProducts , postkhoWithProducts , putkhoWithProducts , deletekhoWithProducts} = require('../controllers/warehouseController');
 const router = express.Router();
 

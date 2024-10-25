@@ -1,44 +1,11 @@
 const pool = require('../config/database');
-
+const productService = require('../services/productService');
 
 
 // Hiển thị tất cả sản phẩm cùng với hình ảnh
 const getproduct = async (req, res) => {
     try {
-        // Truy vấn kết hợp bảng SanPham và HinhAnhSanPham
-        const query = `
-            SELECT 
-                sp.*, 
-                ha.DuongDanHinh 
-            FROM 
-                SanPham sp 
-            LEFT JOIN 
-                HinhAnhSanPham ha ON sp.SanPhamId = ha.SanPhamId 
-        `;
-        
-        const [results] = await pool.query(query);
-
-        // Tạo một cấu trúc dữ liệu rõ ràng
-        const products = results.reduce((acc, product) => {
-            const { DuongDanHinh, ...productData } = product; // Tách thông tin hình ảnh khỏi thông tin sản phẩm
-
-            // Kiểm tra xem sản phẩm đã tồn tại trong mảng hay chưa
-            const existingProduct = acc.find(item => item.SanPhamId === productData.SanPhamId);
-
-            if (existingProduct) {
-                // Nếu sản phẩm đã tồn tại, thêm hình ảnh vào mảng hình ảnh
-                existingProduct.HinhAnh.push(DuongDanHinh);
-            } else {
-                // Nếu chưa tồn tại, tạo mới sản phẩm và khởi tạo mảng hình ảnh
-                acc.push({
-                    ...productData,
-                    HinhAnh: DuongDanHinh ? [DuongDanHinh] : [] // Khởi tạo mảng hình ảnh
-                });
-            }
-
-            return acc;
-        }, []);
-
+        const products = await productService.getAllProducts(); // Sử dụng hàm từ service
         res.json(products);
     } catch (error) {
         return res.status(500).json({ error: error.message });
@@ -49,33 +16,16 @@ const getproduct = async (req, res) => {
 
 
 
+
 // Thêm sản phẩm (cùng với hình ảnh)
 const postproduct = async (req, res) => {
-    const { TenSanPham, MoTa, Gia, SoLuongKho, LoaiSanPhamId, HinhAnh } = req.body;
-
     try {
-        // Kiểm tra xem sản phẩm đã tồn tại hay chưa
-        const [existingProducts] = await pool.query('SELECT * FROM SanPham WHERE TenSanPham = ?', [TenSanPham]);
-        if (existingProducts.length > 0) {
-            return res.status(201).json({ message: 'Sản phẩm đã tồn tại.', status: 'warning' });
+        const result = await productService.createProduct(req.body);
+        if (result.status === 'warning') {
+            return res.status(201).json(result);
         }
 
-        // Thêm sản phẩm
-        const [results] = await pool.query(
-            'INSERT INTO SanPham (TenSanPham, MoTa, Gia, SoLuongKho, LoaiSanPhamId) VALUES (?, ?, ?, ?, ?)', 
-            [TenSanPham, MoTa, Gia, SoLuongKho, LoaiSanPhamId]
-        );
-        const sanPhamId = results.insertId;
-
-        // Thêm hình ảnh cho sản phẩm
-        const hinhAnhQueries = HinhAnh.map(async (image) => {
-            await pool.query('INSERT INTO HinhAnhSanPham (SanPhamId, DuongDanHinh) VALUES (?, ?)', [sanPhamId, image]);
-        });
-
-        // Xử lý các promise để thêm tất cả hình ảnh
-        await Promise.all(hinhAnhQueries);
-
-        res.status(200).json({ message: 'Sản phẩm đã được tạo thành công!', sanPhamId, status: 'success' });
+        res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -83,45 +33,21 @@ const postproduct = async (req, res) => {
 
 // Sửa sản phẩm
 const putproduct = async (req, res) => {
-    const { id } = req.params;
-    const { TenSanPham, MoTa, Gia, SoLuongKho, LoaiSanPhamId, HinhAnh } = req.body;
+    const { id } = req.params; // Lấy id từ params
 
     try {
-        // Kiểm tra tên sản phẩm đã tồn tại hay chưa (ngoại trừ sản phẩm hiện tại)
-        const [existingProduct] = await pool.query(
-            'SELECT * FROM SanPham WHERE TenSanPham = ? AND SanPhamId != ?', 
-            [TenSanPham, id]
-        );
-
-        if (existingProduct.length > 0) {
-            return res.status(201).json({ message: 'Tên sản phẩm đã tồn tại.', status: 'warning' });
+        const result = await productService.updateProduct(id, req.body); // Gọi hàm service để cập nhật sản phẩm
+        
+        // Kiểm tra trạng thái kết quả và trả về mã trạng thái tương ứng
+        if (result.status === 'warning') {
+            return res.status(201).json(result);
+        } else if (result.status === 'error') {
+            return res.status(404).json(result);
         }
 
-        // Cập nhật sản phẩm
-        const [updateResults] = await pool.query(
-            'UPDATE SanPham SET TenSanPham = ?, MoTa = ?, Gia = ?, SoLuongKho = ?, LoaiSanPhamId = ? WHERE SanPhamId = ?', 
-            [TenSanPham, MoTa, Gia, SoLuongKho, LoaiSanPhamId, id]
-        );
-
-        if (updateResults.affectedRows === 0) {
-            return res.status(404).json({ message: 'Sản phẩm không tồn tại.' });
-        }
-
-        // Cập nhật hình ảnh (xóa hết hình ảnh cũ và thêm hình ảnh mới)
-        await pool.query('DELETE FROM HinhAnhSanPham WHERE SanPhamId = ?', [id]);
-
-        if (HinhAnh && HinhAnh.length > 0) {
-            const hinhAnhQueries = HinhAnh.map(image => 
-                pool.query('INSERT INTO HinhAnhSanPham (SanPhamId, DuongDanHinh) VALUES (?, ?)', [id, image])
-            );
-
-            // Xử lý các promise để thêm tất cả hình ảnh mới
-            await Promise.all(hinhAnhQueries);
-        }
-
-        res.status(200).json({ message: 'Sản phẩm đã được cập nhật thành công!', status: 'success' });
+        res.status(200).json(result); // Trả về phản hồi thành công
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: error.message }); // Xử lý lỗi
     }
 };
 
@@ -131,25 +57,18 @@ const deleteproduct = async (req, res) => {
     const { id } = req.params;
 
     try {
-        // Kiểm tra sản phẩm có tồn tại không
-        const [productResults] = await pool.query('SELECT * FROM SanPham WHERE SanPhamId = ?', [id]);
-        if (productResults.length === 0) {
-            return res.status(201).json({ message: 'Sản phẩm không tồn tại.', status: 'warning' });
+        const result = await productService.deleteProduct(id); // Gọi hàm service để xóa sản phẩm
+
+        // Kiểm tra trạng thái kết quả và trả về mã trạng thái tương ứng
+        if (result.status === 'warning') {
+            return res.status(201).json(result);
+        } else if (result.status === 'error') {
+            return res.status(404).json(result);
         }
 
-        // Xóa hình ảnh liên quan
-        await pool.query('DELETE FROM HinhAnhSanPham WHERE SanPhamId = ?', [id]);
-
-        // Xóa sản phẩm
-        const [results] = await pool.query('DELETE FROM SanPham WHERE SanPhamId = ?', [id]);
-
-        if (results.affectedRows === 0) {
-            return res.status(404).json({ message: 'Sản phẩm không tồn tại.' });
-        }
-
-        res.status(200).json({ message: 'Sản phẩm đã được xóa thành công!', status: 'success' });
+        res.status(200).json(result); // Trả về phản hồi thành công
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        res.status(500).json({ error: error.message }); // Xử lý lỗi
     }
 };
 

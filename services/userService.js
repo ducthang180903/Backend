@@ -40,27 +40,55 @@ const register = async (userData) => {
 // Đăng nhập tài khoản người dùng
 const login = async (userData) => {
     const { TenDangNhap, MatKhau } = userData;
-  
+
+    // Kiểm tra xem cả TenDangNhap và MatKhau có tồn tại không
+    if (!TenDangNhap || !MatKhau) {
+        console.log('Tên đăng nhập hoặc mật khẩu không được để trống');
+        throw new Error('Tên đăng nhập và mật khẩu không được để trống');
+    }
+
     // Tìm người dùng dựa trên TenDangNhap hoặc Email
     const user = await User.findOne({
-      where: {
-        [Op.or]: [
-          { TenDangNhap: TenDangNhap },
-          { Email: TenDangNhap }
-        ]
-      }
+        where: {
+            [Op.or]: [
+                { TenDangNhap: TenDangNhap },
+                { Email: TenDangNhap }
+            ]
+        }
     });
-  
-    if (!user) throw new Error('Tên đăng nhập hoặc email không tồn tại');
-  
+
+    // Kiểm tra xem người dùng có tồn tại không
+    if (!user) {
+        console.log('Không tìm thấy người dùng với Tên Đăng Nhập hoặc Email:', TenDangNhap);
+        throw new Error('Tên đăng nhập hoặc email không tồn tại');
+    }
+
     // So sánh mật khẩu nhập vào với mật khẩu đã băm nhỏ
     const isMatch = await bcrypt.compare(MatKhau, user.MatKhau);
-  
-    if (!isMatch) throw new Error('Mật khẩu không chính xác');
-  
-    return user; // Trả về thông tin người dùng nếu đăng nhập thành công
-  };
-  
+    if (!isMatch) {
+        console.log('Mật khẩu không chính xác cho người dùng:', TenDangNhap);
+        throw new Error('Mật khẩu không chính xác');
+    }
+
+    console.log('Đăng nhập thành công cho người dùng:', TenDangNhap);
+    
+    // Trả về thông tin người dùng
+    return {
+        NguoiDungId: user.NguoiDungId,
+        TenDangNhap: user.TenDangNhap,
+        Email: user.Email,
+        DiaChi: user.DiaChi,
+        SoDienThoai: user.SoDienThoai,
+        VaiTro: user.VaiTro,
+        ThoiGianTao: user.ThoiGianTao
+    };
+};
+
+
+
+
+
+
    // Lấy tất cả người dùng từ model User
   const getAllUsers = async () => {
     const users = await User.findAll({
