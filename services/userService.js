@@ -38,16 +38,15 @@ const register = async (userData) => {
 
 
 // Đăng nhập tài khoản người dùng
-const login = async (userData) => {
+// Hàm đăng nhập
+const login = async (userData, req) => {
     const { TenDangNhap, MatKhau } = userData;
 
-    // Kiểm tra xem cả TenDangNhap và MatKhau có tồn tại không
     if (!TenDangNhap || !MatKhau) {
         console.log('Tên đăng nhập hoặc mật khẩu không được để trống');
         throw new Error('Tên đăng nhập và mật khẩu không được để trống');
     }
 
-    // Tìm người dùng dựa trên TenDangNhap hoặc Email
     const user = await User.findOne({
         where: {
             [Op.or]: [
@@ -57,13 +56,11 @@ const login = async (userData) => {
         }
     });
 
-    // Kiểm tra xem người dùng có tồn tại không
     if (!user) {
         console.log('Không tìm thấy người dùng với Tên Đăng Nhập hoặc Email:', TenDangNhap);
         throw new Error('Tên đăng nhập hoặc email không tồn tại');
     }
 
-    // So sánh mật khẩu nhập vào với mật khẩu đã băm nhỏ
     const isMatch = await bcrypt.compare(MatKhau, user.MatKhau);
     if (!isMatch) {
         console.log('Mật khẩu không chính xác cho người dùng:', TenDangNhap);
@@ -71,16 +68,36 @@ const login = async (userData) => {
     }
 
     console.log('Đăng nhập thành công cho người dùng:', TenDangNhap);
-    
-    // Trả về thông tin người dùng
+
+    // Lưu thông tin người dùng vào session nếu session tồn tại
+    if (req && req.session) {
+        req.session.user = {
+            NguoiDungId: user.NguoiDungId,
+            TenDangNhap: user.TenDangNhap,
+            Email: user.Email,
+            DiaChi: user.DiaChi,
+            SoDienThoai: user.SoDienThoai,
+            VaiTro: user.VaiTro,
+            ThoiGianTao: user.ThoiGianTao
+        };
+    } else {
+        console.log('Session không tồn tại, không thể lưu trạng thái đăng nhập');
+    }
+
+    return req.session.user; // Trả về thông tin người dùng đã lưu vào session
+};
+
+
+const checkLoginStatus = (req) => {
+    // Kiểm tra nếu req và req.session tồn tại
+    if (req && req.session && req.session.user) {
+        return {
+            loggedIn: true,
+            user: req.session.user,
+        };
+    }
     return {
-        NguoiDungId: user.NguoiDungId,
-        TenDangNhap: user.TenDangNhap,
-        Email: user.Email,
-        DiaChi: user.DiaChi,
-        SoDienThoai: user.SoDienThoai,
-        VaiTro: user.VaiTro,
-        ThoiGianTao: user.ThoiGianTao
+        loggedIn: false,
     };
 };
 
@@ -175,4 +192,4 @@ const updateUser = async (nguoiDungId, userData) => {
 
 
 
-module.exports = { register, login ,getAllUsers , deleteUser , updateUser };
+module.exports = { register, login ,getAllUsers , deleteUser , updateUser , checkLoginStatus };

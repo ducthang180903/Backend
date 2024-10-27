@@ -28,30 +28,35 @@ const registerUser = async (req, res) => {
 // Controller loginUser
 const loginUser = async (req, res) => {
     try {
-        // Gọi hàm login từ UserService để xác thực người dùng
-        const user = await UserService.login(req.body);
+        // Gọi hàm login từ UserService để xác thực người dùng, truyền cả req
+        const user = await UserService.login(req.body, req);
 
         // Kiểm tra xem user có hợp lệ không
         if (!user || !user.NguoiDungId) {
             throw new Error('Không tìm thấy thông tin người dùng.');
-        }
+        } 
 
-        // Lưu thông tin người dùng vào session
-        req.session.user = {
-            NguoiDungId: user.NguoiDungId,
-            TenDangNhap: user.TenDangNhap,
-            Email: user.Email,
-            DiaChi: user.DiaChi,
-            SoDienThoai: user.SoDienThoai,
-            VaiTro: user.VaiTro,
-            ThoiGianTao: user.ThoiGianTao
-        };
+        // Kiểm tra nếu `req.session` tồn tại
+        if (req.session) {
+            // Lưu thông tin người dùng vào session
+            req.session.user = {
+                NguoiDungId: user.NguoiDungId,
+                TenDangNhap: user.TenDangNhap,
+                Email: user.Email,
+                DiaChi: user.DiaChi,
+                SoDienThoai: user.SoDienThoai,
+                VaiTro: user.VaiTro
+            };
+        } else {
+            console.error('Session không tồn tại. Đảm bảo rằng express-session đã được cấu hình.');
+        }
 
         // Trả về thông báo thành công và thông tin người dùng
         return res.status(200).json({ 
             message: 'Đăng nhập thành công!', 
-            user: req.session.user // Trả về thông tin người dùng từ session
+            user: { NguoiDungId: user.NguoiDungId, TenDangNhap: user.TenDangNhap }
         });
+    
     } catch (error) {
         console.error('Lỗi khi đăng nhập:', error); // Log lỗi
         return res.status(400).json({ message: error.message });
@@ -60,6 +65,36 @@ const loginUser = async (req, res) => {
 
 
 
+
+
+const checkLogin = (req, res) => {
+    try {
+        const status = UserService.checkLoginStatus(req);
+        return res.status(200).json(status);
+    } catch (error) {
+        console.error('Lỗi khi kiểm tra trạng thái đăng nhập:', error);
+        return res.status(500).json({ message: 'Có lỗi xảy ra trong quá trình kiểm tra đăng nhập.' });
+    }
+};
+// Hàm logout
+const logoutUser = async (req, res) => {
+    try {
+        // Xóa session của người dùng
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('Lỗi khi đăng xuất:', err);
+                return res.status(500).json({ message: 'Đăng xuất thất bại.' });
+            }
+            
+            // Xóa cookie session phía client
+            res.clearCookie('connect.sid');
+            return res.status(200).json({ message: 'Đăng xuất thành công!' });
+        });
+    } catch (error) {
+        console.error('Lỗi khi đăng xuất:', error);
+        return res.status(500).json({ message: 'Đăng xuất thất bại.' });
+    }
+};
 
 // Xóa người dùng
 const deleteUser = async (req, res) => {
@@ -88,4 +123,4 @@ const updateUser = async (req, res) => {
     }
 };
 
-module.exports = { getUsers, registerUser, loginUser, deleteUser , updateUser };
+module.exports = { getUsers, registerUser, loginUser, deleteUser , updateUser  , checkLogin , logoutUser };

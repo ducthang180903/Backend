@@ -1,7 +1,7 @@
 // routes/userRoutes.js
 
 const express = require('express');
-const { registerUser, loginUser, getUsers ,updateUser, deleteUser  } = require('../controllers/userController');
+const { registerUser, loginUser, getUsers ,updateUser, deleteUser , checkLogin , logoutUser } = require('../controllers/userController');
 const router = express.Router();
 
 // Route để lấy danh sách người dùng
@@ -16,6 +16,7 @@ router.post('/register', registerUser);
 
 //  Đăng nhập người dùng
 router.post('/login', loginUser);
-
+router.get('/check-login', checkLogin);
+router.get('/logout', logoutUser);
 
 module.exports = router;

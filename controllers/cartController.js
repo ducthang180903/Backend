@@ -5,46 +5,38 @@ const  cartService  = require('../services/cartservice');
 
 
 const postcartProducts = async (req, res) => {
-    const { SanPhamId, SoLuong } = req.body;
-
-    // Kiểm tra xem người dùng đã đăng nhập hay chưa
-    const NguoiDungId = req.session.userId;
-
-    if (!NguoiDungId) {
-        return res.status(403).json({ message: 'Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.' });
-    }
-
     try {
-        // Kiểm tra xem giỏ hàng đã tồn tại cho người dùng chưa
-        let cart = await cartService.getCart(NguoiDungId);
+        const userId = req.session.user ? req.session.user.NguoiDungId : null; // Lấy ID người dùng từ session
+        const { SanPhamId, SoLuong } = req.body; // Lấy sản phẩm và số lượng từ request body
+        const SessionId = req.session.SessionId;
+        // Gọi hàm thêm sản phẩm vào giỏ hàng từ CartService
+        const result = await cartService.addToCart(SessionId ,userId, SanPhamId, SoLuong);
 
-        let GioHangId;
-
-        if (!cart) {
-            // Nếu giỏ hàng chưa tồn tại, tạo mới
-            cart = await cartService.createCart(NguoiDungId);
-            GioHangId = cart.GioHangId;
-        } else {
-            // Nếu giỏ hàng đã tồn tại
-            GioHangId = cart.GioHangId;
-        }
-
-        // Kiểm tra xem sản phẩm đã tồn tại trong giỏ hàng chưa
-        const existingProduct = await cartService.getProductInCart(GioHangId, SanPhamId);
-
-        if (existingProduct) {
-            // Nếu sản phẩm đã có trong giỏ hàng, cập nhật số lượng
-            await cartService.updateProductQuantity(GioHangId, SanPhamId, SoLuong);
-        } else {
-            // Nếu sản phẩm chưa có trong giỏ hàng, thêm mới
-            await cartService.addProductToCart(GioHangId, SanPhamId, SoLuong);
-        }
-
-        res.status(201).json({ message: 'Sản phẩm đã được thêm vào giỏ hàng thành công!' });
+        return res.status(200).json({
+            message: 'Thêm sản phẩm vào giỏ hàng thành công!',
+            result
+        });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Lỗi khi thêm sản phẩm vào giỏ hàng:', error);
+        return res.status(400).json({ message: error.message });
     }
 };
+
+
+// Xóa sản phẩm khỏi giỏ hàng
+const deleteCartProduct = async (req, res) => {
+    const sanPhamId = req.params.sanPhamId; // Lấy SanPhamId từ tham số URL
+    const userId = req.session.user ? req.session.user.NguoiDungId : null; // Lấy ID người dùng từ session
+    const sessionId = req.sessionID; // Lấy SessionId từ session
+    console.log('NguoiDungId:', userId); // Log NguoiDungId
+    try {
+        const deletedProduct = await cartService.deleteCartProduct(sanPhamId, userId, sessionId);
+        return res.status(200).json({ status: 'success', message: deletedProduct.message });
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+};
+
 
 
 
@@ -92,61 +84,20 @@ const postcartProducts = async (req, res) => {
 // };
 
 
-// const getCart = async (req, res) => {
-//     const NguoiDungId = req.session.userId || null; // Nếu người dùng đã đăng nhập
-//     const SessionId = req.sessionID; // Sử dụng sessionId cho người dùng chưa đăng nhập
+const getCart = async (req, res) => {
+    const userId = req.session.user ? req.session.user.NguoiDungId : null; // Lấy NguoiDungId từ session
+    const SessionId = req.session.SessionId; // Lấy SessionId từ session
 
-//     try {
-//         // Kiểm tra xem giỏ hàng có tồn tại cho người dùng hoặc session này không
-//         let [cart] = await pool.query(
-//             'SELECT * FROM GioHang WHERE (NguoiDungId = ? OR SessionId = ?) LIMIT 1',
-//             [NguoiDungId, SessionId]
-//         );
+    try {
+        const result = await cartService.getCart(userId, SessionId);
 
-//         if (cart.length === 0) {
-//             return res.status(201).json({ message: 'Giỏ hàng trống.', status: 'warning' });
-//         }
+        // Trả về kết quả
+        res.status(result.status === 'success' ? 200 : 201).json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 
-//         const GioHangId = cart[0].GioHangId;
-
-//         // Lấy chi tiết sản phẩm trong giỏ hàng cùng với hình ảnh
-//         const [cartDetails] = await pool.query(
-//             `SELECT 
-//                 sp.SanPhamId, 
-//                 sp.TenSanPham, 
-//                 sp.Gia, 
-//                 sp.MoTa, 
-//                 sp.SoLuongKho, 
-//                 ctgh.SoLuong,
-//                 GROUP_CONCAT(ha.DuongDanHinh) AS DuongDanHinh  -- Sử dụng GROUP_CONCAT để lấy nhiều hình ảnh
-//              FROM ChiTietGioHang ctgh
-//              JOIN SanPham sp ON ctgh.SanPhamId = sp.SanPhamId
-//              LEFT JOIN HinhAnhSanPham ha ON sp.SanPhamId = ha.SanPhamId
-//              WHERE ctgh.GioHangId = ?
-//              GROUP BY sp.SanPhamId`,  // Nhóm theo SanPhamId để gom hình ảnh
-//             [GioHangId]
-//         );
-
-//         if (cartDetails.length === 0) {
-//             return res.status(201).json({ message: 'Giỏ hàng trống.', status: 'warning' });
-//         }
-
-//         // Chuyển đổi chuỗi hình ảnh thành mảng
-//         const cartWithImages = cartDetails.map(item => ({
-//             ...item,
-//             DuongDanHinh: item.DuongDanHinh ? item.DuongDanHinh.split(',') : []  // Chia tách chuỗi thành mảng
-//         }));
-
-//         // Trả về thông tin giỏ hàng
-//         res.status(200).json({
-//             message: 'Giỏ hàng hiện tại của bạn:',
-//             cart: cartWithImages,
-//             status: 'success'
-//         });
-//     } catch (error) {
-//         res.status(500).json({ error: error.message });
-//     }
-// };
 
 
 
@@ -162,5 +113,5 @@ const postcartProducts = async (req, res) => {
 
 
 module.exports = {
-    postcartProducts
+    postcartProducts, getCart ,deleteCartProduct
 };
