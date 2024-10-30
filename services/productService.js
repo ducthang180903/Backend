@@ -10,13 +10,13 @@ const createProduct = async (productData) => {
     // Kiểm tra xem loại sản phẩm đã tồn tại hay chưa
     const existingLoaiSanPham = await LoaiSanPham.findOne({ where: { LoaiSanPhamId } });
     if (!existingLoaiSanPham) {
-        return { message: 'Loại sản phẩm không tồn tại.', status: 'warning', sanPhamId: null };
+        return { warning: 'Loại sản phẩm không tồn tại.', status: 201, sanPhamId: null };
     }
 
     // Kiểm tra xem sản phẩm đã tồn tại hay chưa
     const existingProduct = await SanPham.findOne({ where: { TenSanPham } });
     if (existingProduct) {
-        return { message: 'Sản phẩm đã tồn tại.', status: 'warning', sanPhamId: null };
+        return { warning: 'Sản phẩm đã tồn tại.', status: 201, sanPhamId: null };
     }
 
     // Thêm sản phẩm
@@ -54,7 +54,7 @@ const updateProduct = async (id, productData) => {
     });
 
     if (existingProduct) {
-        return { message: 'Tên sản phẩm đã tồn tại.', status: 'warning' };
+        return { warning: 'Tên sản phẩm đã tồn tại.', status: 201 };
     }
 
     // Cập nhật sản phẩm
@@ -70,14 +70,14 @@ const updateProduct = async (id, productData) => {
     );
 
     if (updatedRows === 0) {
-        return { message: 'Sản phẩm không tồn tại.', status: 'error' };
+        return { warning: 'Sản phẩm không tồn tại.', status: 201 };
     }
 
     // Xóa hình ảnh cũ và thêm hình ảnh mới
     await HinhAnhSanPham.destroy({ where: { SanPhamId: id } });
 
     if (HinhAnh && HinhAnh.length > 0) {
-        const hinhAnhPromises = HinhAnh.map(image => 
+        const hinhAnhPromises = HinhAnh.map(image =>
             HinhAnhSanPham.create({
                 SanPhamId: id,
                 DuongDanHinh: image
@@ -88,7 +88,7 @@ const updateProduct = async (id, productData) => {
         await Promise.all(hinhAnhPromises);
     }
 
-    return { message: 'Sản phẩm đã được cập nhật thành công!', status: 'success' };
+    return { message: 'Sản phẩm đã được cập nhật thành công!', status: 200 };
 };
 
 // xóa sản phẩm
@@ -139,4 +139,4 @@ const getAllProducts = async () => {
 
 
 
-module.exports = { createProduct , updateProduct , deleteProduct, getAllProducts };
+module.exports = { createProduct, updateProduct, deleteProduct, getAllProducts };

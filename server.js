@@ -14,10 +14,10 @@ const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 app.use(session({
-    secret: 'your-secret-key',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false }
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
 }));
 
 // sequelize.sync().then(() => {
@@ -29,7 +29,7 @@ app.use(session({
 sequelize.authenticate()
   .then(() => {
     console.log('Kết nối đến cơ sở dữ liệu thành công!');
-    
+
     // Bắt đầu server
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);

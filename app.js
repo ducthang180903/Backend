@@ -13,32 +13,35 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const sessionStore = new SequelizeStore({
-    db: sequelize, // Sử dụng kết nối sequelize
+  db: sequelize, // Sử dụng kết nối sequelize
 });
 // Cấu hình CORS
 const corsOptions = {
-    origin: 'http://localhost:3000', // Thay bằng địa chỉ frontend của bạn
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true // Cho phép gửi cookie nếu cần
+  origin: process.env.CORS, // Địa chỉ frontend cho phép, ví dụ: 'http://localhost:3000'
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Các phương thức được phép
+  allowedHeaders: ['Content-Type', 'Authorization'], // Các tiêu đề được phép
+  credentials: true, // Cho phép gửi cookie và thông tin xác thực khác
+  optionsSuccessStatus: 200 // Một số trình duyệt cũ gặp vấn đề với 204
 };
-app.use(cors(corsOptions)); // Thêm cấu hình CORS vào Express
+
+app.use(cors(corsOptions)); // Sử dụng CORS cho toàn bộ ứng dụng
 
 // Cấu hình Sequelize session store
 const store = new SequelizeStore({
-    db: sequelize, // Sử dụng Sequelize instance
+  db: sequelize, // Sử dụng Sequelize instance
 });
 
 // Cấu hình middleware cho session
 app.use(session({
-    secret: 'mysecretkey', // Khóa bí mật của bạn
-    store: sessionStore, // Sử dụng SequelizeStore để lưu session vào cơ sở dữ liệu
-    resave: false, // Không lưu lại session nếu không có thay đổi
-    saveUninitialized: false, // Không lưu session chưa khởi tạo
-    cookie: {
-        maxAge: 1000 * 60 * 30, // Thời gian sống của cookie (30 phút)
-        httpOnly: true, // Chỉ cho phép cookie được truy cập bởi HTTP
-        secure: process.env.NODE_ENV === 'production', // Chỉ sử dụng cookie secure trong môi trường sản xuất
-    }
+  secret: 'mysecretkey', // Khóa bí mật của bạn
+  store: sessionStore, // Sử dụng SequelizeStore để lưu session vào cơ sở dữ liệu
+  resave: false, // Không lưu lại session nếu không có thay đổi
+  saveUninitialized: false, // Không lưu session chưa khởi tạo
+  cookie: {
+    maxAge: 1000 * 60 * 30, // Thời gian sống của cookie (30 phút)
+    httpOnly: true, // Chỉ cho phép cookie được truy cập bởi HTTP
+    secure: process.env.NODE_ENV === 'production', // Chỉ sử dụng cookie secure trong môi trường sản xuất
+  }
 }));
 sessionStore.sync();
 app.use(assignSessionId);
@@ -68,7 +71,7 @@ app.use('/api', cartRouter);
 
 // Route mẫu
 app.get('/', (req, res) => {
-    res.send('Xin chào, đây là server Node.js của bạn!');
+  res.send('Xin chào, đây là server Node.js của bạn!');
 });
 
 app.use(errorMiddleware);

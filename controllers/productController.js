@@ -6,16 +6,11 @@ const productService = require('../services/productService');
 const getproduct = async (req, res) => {
     try {
         const products = await productService.getAllProducts(); // Sử dụng hàm từ service
-        res.json(products);
+        res.status(200).json(products);
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
 };
-
-
-
-
-
 
 // Thêm sản phẩm (cùng với hình ảnh)
 const postproduct = async (req, res) => {
@@ -37,7 +32,7 @@ const putproduct = async (req, res) => {
 
     try {
         const result = await productService.updateProduct(id, req.body); // Gọi hàm service để cập nhật sản phẩm
-        
+
         // Kiểm tra trạng thái kết quả và trả về mã trạng thái tương ứng
         if (result.status === 'warning') {
             return res.status(201).json(result);
@@ -50,7 +45,6 @@ const putproduct = async (req, res) => {
         res.status(500).json({ error: error.message }); // Xử lý lỗi
     }
 };
-
 
 // Xóa sản phẩm
 const deleteproduct = async (req, res) => {
@@ -74,4 +68,4 @@ const deleteproduct = async (req, res) => {
 
 
 
-module.exports = { getproduct, postproduct , putproduct , deleteproduct};
+module.exports = { getproduct, postproduct, putproduct, deleteproduct };

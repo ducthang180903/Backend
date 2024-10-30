@@ -5,20 +5,21 @@ const { Op } = require('sequelize');
 
 //đăng ký tài khoản người dùng
 const register = async (userData) => {
-    const { TenDangNhap, MatKhau, Email, DiaChi, SoDienThoai } = userData;
+    const { TenDangNhap, MatKhau, Account, DiaChi, SoDienThoai, VaiTro } = userData;
+    const role = VaiTro || 'user';
 
     // Kiểm tra tên đăng nhập và email đã tồn tại chưa
     const existingUser = await User.findOne({
         where: {
             [Op.or]: [
                 { TenDangNhap },
-                { Email }
+                { Account }
             ]
         }
     });
 
     if (existingUser) {
-        throw new Error('Tên đăng nhập hoặc email đã tồn tại.');
+        return { warning: 'Tên đăng nhập hoặc tài khoản đã tồn tại.', status: 201 };
     }
 
     // Mã hóa mật khẩu
@@ -28,17 +29,16 @@ const register = async (userData) => {
     const newUser = await User.create({
         TenDangNhap,
         MatKhau: hashedPassword,
-        Email,
+        Account,
         DiaChi,
-        SoDienThoai
+        SoDienThoai,
+        VaiTro: role
     });
-
-    return newUser;
+    if (newUser) {
+        return { message: 'Người dùng đã được tạo thành công!', status: 201, newUser };
+    }
 };
-
-
 // Đăng nhập tài khoản người dùng
-// Hàm đăng nhập
 const login = async (userData, req) => {
     const { TenDangNhap, MatKhau } = userData;
 
@@ -67,8 +67,6 @@ const login = async (userData, req) => {
         throw new Error('Mật khẩu không chính xác');
     }
 
-    console.log('Đăng nhập thành công cho người dùng:', TenDangNhap);
-
     // Lưu thông tin người dùng vào session nếu session tồn tại
     if (req && req.session) {
         req.session.user = {
@@ -80,14 +78,14 @@ const login = async (userData, req) => {
             VaiTro: user.VaiTro,
             ThoiGianTao: user.ThoiGianTao
         };
+        console.log('Đăng nhập thành công cho người dùng:', TenDangNhap);
+
     } else {
         console.log('Session không tồn tại, không thể lưu trạng thái đăng nhập');
     }
 
     return req.session.user; // Trả về thông tin người dùng đã lưu vào session
 };
-
-
 const checkLoginStatus = (req) => {
     // Kiểm tra nếu req và req.session tồn tại
     if (req && req.session && req.session.user) {
@@ -100,20 +98,13 @@ const checkLoginStatus = (req) => {
         loggedIn: false,
     };
 };
-
-
-
-
-
-
-   // Lấy tất cả người dùng từ model User
-  const getAllUsers = async () => {
+// Lấy tất cả người dùng từ model User
+const getAllUsers = async () => {
     const users = await User.findAll({
-        attributes: ['NguoiDungId', 'TenDangNhap', 'Email', 'DiaChi', 'SoDienThoai'] // Lấy các trường cần thiết
+        attributes: ['NguoiDungId', 'TenDangNhap', 'Account', 'DiaChi', 'SoDienThoai', 'VaiTro'] // Lấy các trường cần thiết
     });
     return users;
 };
-
 // Hàm xóa người dùng
 const deleteUser = async (nguoiDungId) => {
     // Tìm người dùng bằng NguoiDungId
@@ -124,7 +115,7 @@ const deleteUser = async (nguoiDungId) => {
     });
 
     if (!user) {
-        throw new Error('Người dùng không tồn tại.'); // Nếu không tìm thấy người dùng
+        return { warning: 'Người dùng không tồn tại.', status: 201 }; // Nếu không tìm thấy người dùng
     }
 
     // Xóa người dùng
@@ -192,4 +183,4 @@ const updateUser = async (nguoiDungId, userData) => {
 
 
 
-module.exports = { register, login ,getAllUsers , deleteUser , updateUser , checkLoginStatus };
+module.exports = { register, login, getAllUsers, deleteUser, updateUser, checkLoginStatus };
