@@ -1,29 +1,43 @@
 const express = require('express');
+const productRouter = express.Router();
 const { getproduct, postproduct, putproduct, deleteproduct, deleteproducts } = require('../controllers/productController');
 const upload = require('../config/multerConfig');
-const router = express.Router();
 
-
-// Route để lấy danh sách SP
-router.get('/sanpham', getproduct);
+productRouter.get('/', async (req, res) => {
+    return await getproduct(req, res);
+});
 
 // Route để thêm SP
-// router.post('/sanpham', upload, postproduct);
-router.post('/sanpham', (req, res, next) => {
-    upload(req, res, (err) => {
+productRouter.post('/', (req, res) => {
+    upload(req, res, async (err) => {
         if (err) {
             // Nếu có lỗi từ multer hoặc fileFilter
             return res.status(201).json({ warning: err.message });
         }
         // Nếu không có lỗi, tiếp tục với controller
-        postproduct(req, res);
+        return await postproduct(req, res);
     });
 });
+
 // Route để sửa SP
-router.put('/sanpham/:id', putproduct);
+productRouter.put('/:id', async (req, res) => {
+    upload(req, res, async (err) => {
+        if (err) {
+            // Nếu có lỗi từ multer hoặc fileFilter
+            return res.status(201).json({ warning: err.message });
+        }
+        // Nếu không có lỗi, tiếp tục với controller
+        return await putproduct(req, res);
+    });
+});
 
 // Route để xóa SP
-router.delete('/sanpham/:id', deleteproduct);
-router.post('/sanpham/delete', deleteproducts);
+productRouter.delete('/:id', async (req, res) => {
+    return await deleteproduct(req, res);
+});
 
-module.exports = router;
+productRouter.post('/delete', async (req, res) => {
+    return await deleteproducts(req, res);
+});
+
+module.exports = productRouter;

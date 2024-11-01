@@ -1,17 +1,29 @@
 const express = require('express');
-const { getproducttype , postproducttype , putproducttype ,deleteproducttype } = require('../controllers/producttypeController');
-const router = express.Router();
+const productTypeRouter = express.Router();
+const { getproducttype, postproducttype, putproducttype, deleteproducttype, deleteproducttypes } = require('../controllers/producttypeController');
 
-// Route để lấy danh sách loaisp
-router.get('/loaisp', getproducttype);
+// Route để lấy danh sách loại sản phẩm
+productTypeRouter.get('/', async (req, res) => {
+    return await getproducttype(req, res);
+});
 
-// Route dể thêm loaisp
-router.post('/loaisp', postproducttype);
+// Route để thêm loại sản phẩm
+productTypeRouter.post('/', async (req, res) => {
+    return await postproducttype(req, res);
+});
 
-// Route SỬ loaisp
-router.put('/loaisp/:id', putproducttype);
+// Route để sửa loại sản phẩm
+productTypeRouter.put('/:id', async (req, res) => {
+    return await putproducttype(req, res);
+});
 
-// Route xóa loaisp
-router.delete('/loaisp/:id', deleteproducttype);
+// Route để xóa loại sản phẩm
+productTypeRouter.delete('/:id', async (req, res) => {
+    return await deleteproducttype(req, res);
+});
 
-module.exports = router;
+productTypeRouter.post('/delete', async (req, res) => {
+    return await deleteproducttypes(req, res);
+});
+
+module.exports = productTypeRouter;

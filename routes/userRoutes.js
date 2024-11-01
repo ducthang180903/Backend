@@ -1,26 +1,33 @@
-// routes/userRoutes.js
-
 const express = require('express');
-const { loginUser, getUsers, updateUser, deleteUser, checkLogin, logoutUser, createUser, deleteUsers } = require('../controllers/userController');
-const router = express.Router();
+const userRouter = express.Router();
+const { updateUser, deleteUser, checkLogin, logoutUser, createUser, deleteUsers, getUsers } = require('../controllers/userController');
 
-// Route để lấy danh sách người dùng
-router.get('/users', getUsers);
+userRouter.get('/', async (req, res) => {
+    return await getUsers(req, res);
+});
 
-router.post('/users', createUser);
+userRouter.post('/', async (req, res) => {
+    return await createUser(req, res);
+});
 
-// Sửa thông tin người dùng
-router.put('/users/:nguoiDungId', updateUser); // Sử dụng PUT cho việc sửa
+userRouter.put('/:nguoiDungId', async (req, res) => {
+    return await updateUser(req, res);
+});
 
-// Xóa người dùng
-router.delete('/users/:nguoiDungId', deleteUser); // Sử dụng DELETE cho việc xóa
-router.post('/users/delete', deleteUsers);// Xóa nhiều data
-//  Đăng ký người dùng
-router.post('/register', createUser);
+userRouter.delete('/:nguoiDungId', async (req, res) => {
+    return await deleteUser(req, res);
+});
 
-//  Đăng nhập người dùng
-router.post('/login', loginUser);
-router.get('/check-login', checkLogin);
-router.post('/logout', logoutUser);
+userRouter.post('/delete', async (req, res) => {
+    return await deleteUsers(req, res);
+});
 
-module.exports = router;
+userRouter.get('/check-login', async (req, res) => {
+    return await checkLogin(req, res);
+});
+
+userRouter.post('/logout', async (req, res) => {
+    return await logoutUser(req, res);
+});
+
+module.exports = userRouter;

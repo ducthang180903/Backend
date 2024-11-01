@@ -181,6 +181,4 @@ const updateUser = async (nguoiDungId, userData) => {
     return user; // Trả về người dùng đã được cập nhật
 };
 
-
-
 module.exports = { register, login, getAllUsers, deleteUser, updateUser, checkLoginStatus };

@@ -23,6 +23,7 @@ const getUsers = async (req, res) => {
 const createUser = async (req, res) => {
     const { TenDangNhap, MatKhau, Account, DiaChi, SoDienThoai, VaiTro } = req.body;
     const role = VaiTro || 'user';
+    // return res.status(200).json({ message: 'Check: ', TenDangNhap, MatKhau, Account, DiaChi, SoDienThoai, VaiTro });
 
     try {
         // Kiểm tra tên đăng nhập và email đã tồn tại chưa
@@ -232,18 +233,20 @@ const checkLogin = (req, res) => {
 };
 // Hàm logout
 const logoutUser = async (req, res) => {
+    // const ss_account = req.body;
+    // return res.json({ message: 'ss_account', ss_account });
     try {
         req.session.destroy((err) => {
             if (err) {
-                return res.status(401).json({ error: 'Đăng xuất thất bại.' });
+                return res.status(201).json({ error: 'Đăng xuất thất bại.' });
             }
 
-            res.clearCookie('ss_account');
+            res.clearCookie('SSID');
             return res.status(200).json({ message: 'Đăng xuất thành công!' });
         });
 
     } catch (error) {
-        return res.status(500).json({ error: 'Đăng xuất thất bại.' });
+        return res.status(500).json({ error: error.message });
     }
 };
 

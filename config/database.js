@@ -30,8 +30,9 @@
 // // Xuất pool kết nối để sử dụng ở nơi khác
 // module.exports = pool;
 const { Sequelize } = require('sequelize');
+require('dotenv').config();
 
-const sequelize = new Sequelize(process.env.DB_NAME || 'nongsan', process.env.DB_USER || 'root', process.env.DB_PASSWORD || '', {
+const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
   dialect: 'mysql',
   // logging: (msg) => console.log(`[Sequelize Log]: ${msg}`), // Tùy chỉnh log
@@ -45,7 +46,7 @@ const sequelize = new Sequelize(process.env.DB_NAME || 'nongsan', process.env.DB
 
 sequelize
   .authenticate()
-  .then(() => console.log('Connected to MySQL successfully!'))
-  .catch((error) => console.error('Unable to connect to MySQL:', error));
+  .then(() => console.log('Kết nối đến cơ sở dữ liệu thành công!'))
+  .catch((error) => console.log('Không thể kết nối đến cơ sở dữ liệu:', error));
 
 module.exports = sequelize;
