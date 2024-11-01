@@ -14,7 +14,7 @@ const User = sequelize.define('NguoiDung', {
   },
   MatKhau: {
     type: DataTypes.STRING(255),
-    allowNull: false,
+    allowNull: true,//Cho phép ko cần MK
   },
   Account: {
     type: DataTypes.STRING(100),

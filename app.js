@@ -6,6 +6,7 @@ const SequelizeStore = require('connect-session-sequelize')(session.Store);
 const sequelize = require('./config/database'); // Kết nối tới Sequelize instance
 const errorMiddleware = require('./middlewares/errorMiddleware');
 const assignSessionId = require('./middlewares/assignSession');
+const path = require('path');
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 const sessionStore = new SequelizeStore({
   db: sequelize, // Sử dụng kết nối sequelize
 });
+
 // Cấu hình CORS
 const corsOptions = {
   origin: process.env.CORS, // Địa chỉ frontend cho phép, ví dụ: 'http://localhost:3000'
@@ -25,6 +27,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions)); // Sử dụng CORS cho toàn bộ ứng dụng
+app.use('/api', express.static(path.join(__dirname, 'uploads')));
 
 // Cấu hình Sequelize session store
 const store = new SequelizeStore({

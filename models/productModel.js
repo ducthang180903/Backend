@@ -57,7 +57,7 @@ SanPham.associate = (models) => {
         foreignKey: 'SanPhamId',
         onDelete: 'CASCADE',
     });
- 
+
     SanPham.hasMany(models.ChiTietDonHangDaDangNhap, {
         foreignKey: 'SanPhamId',
         onDelete: 'CASCADE',
@@ -67,9 +67,9 @@ SanPham.associate = (models) => {
         onDelete: 'CASCADE',
     });
     // Định nghĩa mối quan hệ
-SanPham.hasMany(models.Kho, {
-    foreignKey: 'SanPhamId', // Khóa ngoại
-    as: 'kho', // Alias cho mối quan hệ
-});
+    SanPham.hasMany(models.Kho, {
+        foreignKey: 'SanPhamId', // Khóa ngoại
+        as: 'kho', // Alias cho mối quan hệ
+    });
 };
 module.exports = SanPham;

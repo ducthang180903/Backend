@@ -4,7 +4,7 @@ const assignSessionId = (req, res, next) => {
     if (!req.session.user && !req.session.SessionId) {
         // Nếu người dùng chưa đăng nhập và chưa có SessionId, tạo mới SessionId
         req.session.SessionId = uuidv4();
-        console.log("SessionId mới được tạo 123455:", req.session.SessionId);
+        // console.log("SessionId mới được tạo 123455:", req.session.SessionId);
     }
     next();
 };

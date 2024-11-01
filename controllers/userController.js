@@ -162,6 +162,30 @@ const deleteUser = async (req, res) => {
     }
 };
 
+const deleteUsers = async (req, res) => {
+    const data = req.body;
+
+    if (!Array.isArray(data) || data.length === 0) {
+        return res.status(201).json({ warning: "Danh sách người dùng không hợp lệ!" });
+    }
+
+    try {
+        const deleteUser = await User.destroy({
+            where: {
+                NguoiDungId: data
+            }
+        });
+
+        if (deleteUser === 0) {
+            return res.status(201).json({ warning: "Không tìm thấy người dùng nào để xóa!" });
+        }
+
+        return res.status(200).json({ message: `Đã xóa thành công ${deleteUser} người dùng` });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+};
+
 // Controller loginUser
 const loginUser = async (req, res) => {
     const { Account, MatKhau } = req.body; // Lấy Ten
@@ -176,6 +200,7 @@ const loginUser = async (req, res) => {
     try {
         const user = await User.findOne({ where: { Account } });
         const isMatch = await bcrypt.compare(MatKhau, user.MatKhau);
+        // console.log('check account: ', user);
 
         if (!user) {
             return res.status(201).json({ warning: 'Tài khoản không tồn tại.' }); // Nếu trùng lặp
@@ -208,24 +233,19 @@ const checkLogin = (req, res) => {
 // Hàm logout
 const logoutUser = async (req, res) => {
     try {
-        // Xóa session của người dùng
         req.session.destroy((err) => {
             if (err) {
-                console.error('Lỗi khi đăng xuất:', err);
-                return res.status(500).json({ message: 'Đăng xuất thất bại.' });
+                return res.status(401).json({ error: 'Đăng xuất thất bại.' });
             }
 
-            // Xóa cookie session phía client
-            res.clearCookie('connect.sid');
+            res.clearCookie('ss_account');
             return res.status(200).json({ message: 'Đăng xuất thành công!' });
         });
+
     } catch (error) {
-        console.error('Lỗi khi đăng xuất:', error);
-        return res.status(500).json({ message: 'Đăng xuất thất bại.' });
+        return res.status(500).json({ error: 'Đăng xuất thất bại.' });
     }
 };
 
 
-
-
-module.exports = { getUsers, createUser, loginUser, deleteUser, updateUser, checkLogin, logoutUser };
+module.exports = { getUsers, createUser, loginUser, deleteUser, deleteUsers, updateUser, checkLogin, logoutUser };

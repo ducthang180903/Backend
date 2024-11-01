@@ -1,5 +1,5 @@
 const pool = require('../config/database'); // Đảm bảo bạn đã cấu hình kết nối tới database
-const  cartService  = require('../services/cartservice');
+const cartService = require('../services/cartservice');
 
 // Thêm sản phẩm vào giỏ hàng (tự động phân biệt giữa người dùng đã đăng nhập và chưa đăng nhập)
 
@@ -10,7 +10,7 @@ const postcartProducts = async (req, res) => {
         const { SanPhamId, SoLuong } = req.body; // Lấy sản phẩm và số lượng từ request body
         const SessionId = req.session.SessionId;
         // Gọi hàm thêm sản phẩm vào giỏ hàng từ CartService
-        const result = await cartService.addToCart(SessionId ,userId, SanPhamId, SoLuong);
+        const result = await cartService.addToCart(SessionId, userId, SanPhamId, SoLuong);
 
         return res.status(200).json({
             message: 'Thêm sản phẩm vào giỏ hàng thành công!',
@@ -28,7 +28,7 @@ const deleteCartProduct = async (req, res) => {
     const sanPhamId = req.params.sanPhamId; // Lấy SanPhamId từ tham số URL
     const userId = req.session.user ? req.session.user.NguoiDungId : null; // Lấy ID người dùng từ session
     const sessionId = req.sessionID; // Lấy SessionId từ session
-    console.log('NguoiDungId:', userId); // Log NguoiDungId
+    // console.log('NguoiDungId:', userId); // Log NguoiDungId
     try {
         const deletedProduct = await cartService.deleteCartProduct(sanPhamId, userId, sessionId);
         return res.status(200).json({ status: 'success', message: deletedProduct.message });
@@ -113,5 +113,5 @@ const getCart = async (req, res) => {
 
 
 module.exports = {
-    postcartProducts, getCart ,deleteCartProduct
+    postcartProducts, getCart, deleteCartProduct
 };
