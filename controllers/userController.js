@@ -190,7 +190,7 @@ const deleteUsers = async (req, res) => {
 // Controller loginUser
 const loginUser = async (req, res) => {
     const { Account, MatKhau } = req.body; // Lấy Ten
-
+    // return res.status(200).json({ message: 'check: ', Account, MatKhau });
     if (!Account) {
         return res.status(201).json({ warning: 'Vui lòng nhập tài khoản.' })
     }
@@ -200,21 +200,25 @@ const loginUser = async (req, res) => {
 
     try {
         const user = await User.findOne({ where: { Account } });
-        const isMatch = await bcrypt.compare(MatKhau, user.MatKhau);
-        // console.log('check account: ', user);
+        // return res.json({ message: 'check account: ', user });
 
         if (!user) {
             return res.status(201).json({ warning: 'Tài khoản không tồn tại.' }); // Nếu trùng lặp
         }
+
+        const isMatch = await bcrypt.compare(MatKhau, user.MatKhau);
+
         if (!isMatch) {
             return res.status(201).json({ warning: 'Mật khẩu không chính xác.' });
         }
-        if (req.session) {
-            req.session.user = user;
-        }
-        const ss_account = generateToken(user.NguoiDungId, user.Account);
 
-        return res.status(200).json({ message: 'Đăng nhập thành công.', ss_account });
+        const ss_account = generateToken(user.NguoiDungId, user.Account);
+        const account_user = user.TenDangNhap;
+        // return res.json({ message: 'check: ', account_user });
+        req.session.user = ss_account;
+        await req.session.save()
+
+        return res.status(200).json({ message: 'Đăng nhập thành công.', ss_account, account_user });
 
     } catch (error) {
         // console.error('Lỗi khi đăng nhập:', error); // Log lỗi
@@ -233,8 +237,6 @@ const checkLogin = (req, res) => {
 };
 // Hàm logout
 const logoutUser = async (req, res) => {
-    // const ss_account = req.body;
-    // return res.json({ message: 'ss_account', ss_account });
     try {
         req.session.destroy((err) => {
             if (err) {

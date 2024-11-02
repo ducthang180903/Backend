@@ -40,51 +40,42 @@ const register = async (userData) => {
 };
 // Đăng nhập tài khoản người dùng
 const login = async (userData, req) => {
-    const { TenDangNhap, MatKhau } = userData;
+    const { Account, MatKhau } = userData;
 
-    if (!TenDangNhap || !MatKhau) {
-        console.log('Tên đăng nhập hoặc mật khẩu không được để trống');
-        throw new Error('Tên đăng nhập và mật khẩu không được để trống');
+    if (!Account || !MatKhau) {
+        throw new Error('Tên đăng nhập và mật khẩu không được để trống.');
     }
+    try {
+        const user = await User.findOne({ where: { Account } });
 
-    const user = await User.findOne({
-        where: {
-            [Op.or]: [
-                { TenDangNhap: TenDangNhap },
-                { Email: TenDangNhap }
-            ]
+        if (!user) {
+            throw new Error('Tài khoản này không tồn tại.');
         }
-    });
 
-    if (!user) {
-        console.log('Không tìm thấy người dùng với Tên Đăng Nhập hoặc Email:', TenDangNhap);
-        throw new Error('Tên đăng nhập hoặc email không tồn tại');
+        const isMatch = await bcrypt.compare(MatKhau, user.MatKhau);
+        if (!isMatch) {
+            throw new Error('Tài khoản hoặc mật khẩu không chính xác.');
+        }
+
+        // Lưu thông tin người dùng vào session nếu session tồn tại
+        if (req && req.session) {
+            req.session.user = {
+                NguoiDungId: user.NguoiDungId,
+                TenDangNhap: user.TenDangNhap,
+                Email: user.Email,
+                DiaChi: user.DiaChi,
+                SoDienThoai: user.SoDienThoai,
+                VaiTro: user.VaiTro,
+                ThoiGianTao: user.ThoiGianTao
+            };
+            console.log('Đăng nhập thành công.');
+
+        }
+        return req.session.user;
+    } catch (error) {
+        return req.status(500).json({ error: error.message });
     }
 
-    const isMatch = await bcrypt.compare(MatKhau, user.MatKhau);
-    if (!isMatch) {
-        console.log('Mật khẩu không chính xác cho người dùng:', TenDangNhap);
-        throw new Error('Mật khẩu không chính xác');
-    }
-
-    // Lưu thông tin người dùng vào session nếu session tồn tại
-    if (req && req.session) {
-        req.session.user = {
-            NguoiDungId: user.NguoiDungId,
-            TenDangNhap: user.TenDangNhap,
-            Email: user.Email,
-            DiaChi: user.DiaChi,
-            SoDienThoai: user.SoDienThoai,
-            VaiTro: user.VaiTro,
-            ThoiGianTao: user.ThoiGianTao
-        };
-        console.log('Đăng nhập thành công cho người dùng:', TenDangNhap);
-
-    } else {
-        console.log('Session không tồn tại, không thể lưu trạng thái đăng nhập');
-    }
-
-    return req.session.user; // Trả về thông tin người dùng đã lưu vào session
 };
 const checkLoginStatus = (req) => {
     // Kiểm tra nếu req và req.session tồn tại
