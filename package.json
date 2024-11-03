@@ -1,13 +1,25 @@
 {
-  "name": "chat-ai",
+  "name": "backend",
   "version": "1.0.0",
-  "main": "src/index.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --exec babel-node src/server.js"
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-session-sequelize": "^7.1.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-mysql-session": "^3.0.3",
+    "express-session": "^1.18.1",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.11.3",
+    "sequelize": "^6.37.5"
+  }
 }
