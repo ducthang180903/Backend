@@ -7,8 +7,8 @@ const { isAdmin, isManager } = require('../middlewares/authMiddleware');
 const apiRouter = express.Router();
 
 apiRouter.use('/', loginsignupRouter);
-apiRouter.use('/user', isAdmin, isManager, userRouter);
-apiRouter.use('/loaisanpham', isAdmin, isManager, producttypeRoutes);
-apiRouter.use('/sanpham', isAdmin, isManager, productRouter)
+apiRouter.use('/user', isManager, userRouter);
+apiRouter.use('/loaisanpham', isManager, producttypeRoutes);
+apiRouter.use('/sanpham', isManager, productRouter);
 
 module.exports = apiRouter;
