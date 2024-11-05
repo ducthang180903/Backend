@@ -16,7 +16,7 @@ const User = sequelize.define('NguoiDung', {
     type: DataTypes.STRING(255),
     allowNull: false,
   },
-  Email: {
+  Account: {
     type: DataTypes.STRING(100),
     allowNull: false,
     unique: true,
@@ -28,8 +28,8 @@ const User = sequelize.define('NguoiDung', {
     type: DataTypes.STRING(10),
   },
   VaiTro: {
-    type: DataTypes.ENUM('admin', 'khachhang'),
-    defaultValue: 'khachhang',
+    type: DataTypes.ENUM('admin', 'quanly', 'user'),
+    defaultValue: 'user',
   },
   ThoiGianTao: {
     type: DataTypes.DATE,

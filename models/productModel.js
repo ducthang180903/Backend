@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database'); // Đảm bảo đường dẫn đúng tới tệp cấu hình cơ sở dữ liệu
 const LoaiSanPham = require('./producttypeModel');
-
+const DonViTinh = require('./donViTinhModel');
 const SanPham = sequelize.define('SanPham', {
     SanPhamId: {
         type: DataTypes.INTEGER,
@@ -41,16 +41,29 @@ const SanPham = sequelize.define('SanPham', {
             key: 'LoaiSanPhamId',
         },
     },
+    DonViTinhID:{
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'DonViTinh', // Tên bảng loại sản phẩm
+            key: 'DonViTinhID',
+        },
+    }
 }, {
     tableName: 'SanPham', // Đảm bảo tên bảng đúng
     timestamps: false, // Tùy chọn nếu không muốn sử dụng timestamps tự động
 });
 SanPham.belongsTo(LoaiSanPham, { foreignKey: 'LoaiSanPhamId' });
+SanPham.belongsTo(DonViTinh, { foreignKey: 'DonViTinhID' });
 // Xuất mô hình để sử dụng ở nơi khác
 // Mối quan hệ với LoaiSanPham
 SanPham.associate = (models) => {
     SanPham.belongsTo(models.LoaiSanPham, {
         foreignKey: 'LoaiSanPhamId',
+        onDelete: 'CASCADE',
+    });
+    SanPham.belongsTo(models.DonViTinh, {
+        foreignKey: 'DonViTinhID',
         onDelete: 'CASCADE',
     });
     SanPham.hasMany(models.HinhAnhSanPham, {
