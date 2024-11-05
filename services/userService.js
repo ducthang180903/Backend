@@ -39,6 +39,54 @@ const register = async (userData) => {
     }
 };
 // Đăng nhập tài khoản người dùng
+// const login = async (userData, req) => {
+//     const { TenDangNhap, MatKhau } = userData;
+
+//     if (!TenDangNhap || !MatKhau) {
+//         console.log('Tên đăng nhập hoặc mật khẩu không được để trống');
+//         throw new Error('Tên đăng nhập và mật khẩu không được để trống');
+//     }
+
+//     const user = await User.findOne({
+//         where: {
+//             [Op.or]: [
+//                 { TenDangNhap: TenDangNhap },
+//                 { Email: TenDangNhap }
+//             ]
+//         }
+//     });
+
+//     if (!user) {
+//         console.log('Không tìm thấy người dùng với Tên Đăng Nhập hoặc Email:', TenDangNhap);
+//         throw new Error('Tên đăng nhập hoặc email không tồn tại');
+//     }
+
+//     const isMatch = await bcrypt.compare(MatKhau, user.MatKhau);
+//     if (!isMatch) {
+//         console.log('Mật khẩu không chính xác cho người dùng:', TenDangNhap);
+//         throw new Error('Mật khẩu không chính xác');
+//     }
+
+//     // Lưu thông tin người dùng vào session nếu session tồn tại
+//     if (req && req.session) {
+//         req.session.user = {
+//             NguoiDungId: user.NguoiDungId,
+//             TenDangNhap: user.TenDangNhap,
+//             Email: user.Email,
+//             DiaChi: user.DiaChi,
+//             SoDienThoai: user.SoDienThoai,
+//             VaiTro: user.VaiTro,
+//             ThoiGianTao: user.ThoiGianTao
+//         };
+//         console.log('Đăng nhập thành công cho người dùng:', TenDangNhap);
+
+//     } else {
+//         console.log('Session không tồn tại, không thể lưu trạng thái đăng nhập');
+//     }
+
+//     return req.session.user; // Trả về thông tin người dùng đã lưu vào session
+// };
+// Đăng nhập tài khoản người dùng
 const login = async (userData, req) => {
     const { TenDangNhap, MatKhau } = userData;
 
@@ -67,37 +115,34 @@ const login = async (userData, req) => {
         throw new Error('Mật khẩu không chính xác');
     }
 
-    // Lưu thông tin người dùng vào session nếu session tồn tại
-    if (req && req.session) {
-        req.session.user = {
-            NguoiDungId: user.NguoiDungId,
-            TenDangNhap: user.TenDangNhap,
-            Email: user.Email,
-            DiaChi: user.DiaChi,
-            SoDienThoai: user.SoDienThoai,
-            VaiTro: user.VaiTro,
-            ThoiGianTao: user.ThoiGianTao
-        };
-        console.log('Đăng nhập thành công cho người dùng:', TenDangNhap);
-
-    } else {
-        console.log('Session không tồn tại, không thể lưu trạng thái đăng nhập');
-    }
-
-    return req.session.user; // Trả về thông tin người dùng đã lưu vào session
-};
-const checkLoginStatus = (req) => {
-    // Kiểm tra nếu req và req.session tồn tại
-    if (req && req.session && req.session.user) {
-        return {
-            loggedIn: true,
-            user: req.session.user,
-        };
-    }
-    return {
-        loggedIn: false,
+    // Lưu thông tin người dùng vào req
+    req.user = {
+        NguoiDungId: user.NguoiDungId,
+        TenDangNhap: user.TenDangNhap,
+        Email: user.Email,
+        DiaChi: user.DiaChi,
+        SoDienThoai: user.SoDienThoai,
+        VaiTro: user.VaiTro,
+        ThoiGianTao: user.ThoiGianTao
     };
+    
+    console.log('Đăng nhập thành công cho người dùng:', TenDangNhap);
+
+    return req.user; // Trả về thông tin người dùng đã lưu vào req
 };
+
+// const checkLoginStatus = (req) => {
+//     // Kiểm tra nếu req và req.session tồn tại
+//     if (req && req.session && req.session.user) {
+//         return {
+//             loggedIn: true,
+//             user: req.session.user,
+//         };
+//     }
+//     return {
+//         loggedIn: false,
+//     };
+// };
 // Lấy tất cả người dùng từ model User
 const getAllUsers = async () => {
     const users = await User.findAll({
@@ -105,6 +150,26 @@ const getAllUsers = async () => {
     });
     return users;
 };
+
+const getUserById = async (userId) => {
+    try {
+        const user = await User.findOne({
+            where: { NguoiDungId: userId }, // Điều kiện tìm kiếm theo NguoiDungId
+            attributes: ['NguoiDungId', 'TenDangNhap', 'Account', 'DiaChi', 'SoDienThoai', 'VaiTro'] // Lấy các trường cần thiết
+        });
+
+        // Kiểm tra xem người dùng có tồn tại không
+        if (!user) {
+            throw new Error('Người dùng không tồn tại'); // Nếu không tìm thấy người dùng
+        }
+
+        return user; // Trả về thông tin người dùng
+    } catch (error) {
+        console.error('Lỗi khi lấy thông tin người dùng:', error);
+        throw error; // Ném lại lỗi để xử lý ở nơi gọi hàm
+    }
+};
+
 // Hàm xóa người dùng
 const deleteUser = async (nguoiDungId) => {
     // Tìm người dùng bằng NguoiDungId
@@ -183,4 +248,5 @@ const updateUser = async (nguoiDungId, userData) => {
 
 
 
-module.exports = { register, login, getAllUsers, deleteUser, updateUser, checkLoginStatus };
+
+module.exports = { register, login, getAllUsers, deleteUser, updateUser, getUserById };

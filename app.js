@@ -5,16 +5,32 @@ const session = require('express-session');
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
 const sequelize = require('./config/database'); // Kết nối tới Sequelize instance
 const errorMiddleware = require('./middlewares/errorMiddleware');
-const assignSessionId = require('./middlewares/assignSession');
-
+const authMiddleware = require('./middlewares/authMiddleware');
+// const assignSessionId = require('./middlewares/assignSession');
+const multer = require('multer');
+const cookieParser = require('cookie-parser');
 const app = express();
 
+const path = require('path');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const sessionStore = new SequelizeStore({
   db: sequelize, // Sử dụng kết nối sequelize
 });
+
+// Cấu hình multer để lưu trữ tệp tải lên
+// Cấu hình multer để lưu trữ tệp
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Thư mục lưu trữ tệp
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname)); // Đổi tên tệp để tránh trùng lặp
+  }
+});
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const upload = multer({ storage: storage });
 // Cấu hình CORS
 const corsOptions = {
   origin: process.env.CORS, // Địa chỉ frontend cho phép, ví dụ: 'http://localhost:3000'
@@ -34,7 +50,7 @@ const store = new SequelizeStore({
 // Cấu hình middleware cho session
 app.use(session({
   secret: 'mysecretkey', // Khóa bí mật của bạn
-  store: sessionStore, // Sử dụng SequelizeStore để lưu session vào cơ sở dữ liệu
+  // store: sessionStore, // Sử dụng SequelizeStore để lưu session vào cơ sở dữ liệu
   resave: false, // Không lưu lại session nếu không có thay đổi
   saveUninitialized: false, // Không lưu session chưa khởi tạo
   cookie: {
@@ -44,8 +60,8 @@ app.use(session({
   }
 }));
 sessionStore.sync();
-app.use(assignSessionId);
-
+// app.use(assignSessionId);
+app.use(cookieParser());
 // Khởi tạo bảng session (nếu chưa có)
 store.sync();
 
@@ -56,6 +72,10 @@ app.use('/api', userRoutes);
 // Nạp route của loại sản phẩm
 const producttypeRoutes = require('./routes/producttypeRoutes');
 app.use('/api', producttypeRoutes);
+
+// Nạp route của loại sản phẩm
+const DVTRoutes = require('./routes/donvitinhRoutes');
+app.use('/api', DVTRoutes);
 
 // Nạp route của sản phẩm
 const productRoutes0 = require('./routes/productRoutes');
@@ -75,5 +95,5 @@ app.get('/', (req, res) => {
 });
 
 app.use(errorMiddleware);
-
+// app.use(authMiddleware);
 module.exports = app;

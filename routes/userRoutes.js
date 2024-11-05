@@ -1,11 +1,13 @@
 // routes/userRoutes.js
 
 const express = require('express');
-const { loginUser, getUsers, updateUser, deleteUser, checkLogin, logoutUser, createUser } = require('../controllers/userController');
+const { loginUser, getUsers, updateUser, deleteUser, checkLogin, logoutUser, createUser , getUserById} = require('../controllers/userController');
 const router = express.Router();
 
 // Route để lấy danh sách người dùng
 router.get('/users', getUsers);
+
+router.get('/users/:nguoiDungId', getUserById);
 
 router.post('/users', createUser);
 
