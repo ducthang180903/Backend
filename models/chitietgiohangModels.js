@@ -2,6 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database'); // Điều chỉnh đường dẫn tới tệp database của bạn
 const GioHang = require('./cartModels'); // Điều chỉnh đường dẫn tới tệp GioHang
 const SanPham = require('./productModel'); // Điều chỉnh đường dẫn tới tệp SanPham
+const ChiTietSanPham = require('./chitietsanphamModels');
 
 const ChiTietGioHang = sequelize.define('ChiTietGioHang', {
     ChiTietGioHangId: {
@@ -31,6 +32,15 @@ const ChiTietGioHang = sequelize.define('ChiTietGioHang', {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
+    ChiTietSanPhamId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: ChiTietSanPham,
+            key: 'ChiTietSanPhamId',
+        },
+        onDelete: 'CASCADE',
+    },
 }, {
     tableName: 'ChiTietGioHang', // Chỉ định rõ tên bảng
     timestamps: false, // Tắt tự động thêm createdAt và updatedAt
@@ -41,5 +51,6 @@ ChiTietGioHang.belongsTo(SanPham, {
     foreignKey: 'SanPhamId',
     onDelete: 'CASCADE',
 });
+
 
 module.exports = ChiTietGioHang;

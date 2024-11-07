@@ -8,7 +8,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 // Route để thêm SP
 router.post('/cart',postcartProducts);
 // Route để thêm SP
-router.delete('/cart/:sanPhamId' ,deleteCartProduct);
+router.delete('/cart' ,deleteCartProduct);
 
 // Route để thêm SP
 router.get('/cart',authMiddleware, getCart);
