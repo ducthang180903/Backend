@@ -8,9 +8,95 @@ const { v4: uuidv4 } = require('uuid'); // Import uuid để tạo SessionId
 const { Op, Sequelize } = require('sequelize'); // Nhập Sequelize và Op từ sequelize
 const jwt = require('jsonwebtoken');
 const DonViTinh = require('../models/donViTinhModel');
+const ChiTietSanPham = require('../models/chitietsanphamModels');
 
 
 /// Lấy giỏ hàng dựa trên NguoiDungId
+// const getCart = async (userId) => {
+//     console.log('NguoiDungId:', userId); // Kiểm tra NguoiDungId
+
+//     try {
+//         const cart = await GioHang.findOne({
+//             where: { NguoiDungId: userId }
+//         });
+
+//         if (!cart) {
+//             console.log('Giỏ hàng trống.');
+//             return {
+//                 message: 'Giỏ hàng trống.',
+//                 status: 'warning',
+//                 cartDetails: [],
+//                 totalQuantity: 0
+//             };
+//         }
+
+//         const cartDetails = await ChiTietGioHang.findAll({
+//             where: { GioHangId: cart.GioHangId },
+//             include: [
+//                 {
+//                     model: SanPham,
+//                     attributes: ['SanPhamId', 'TenSanPham', 'MoTa', 'DonViTinhID'],
+//                     include: [
+//                         {
+//                             model: HinhAnhSanPham,
+//                             attributes: ['DuongDanHinh']
+//                         },
+//                         {
+//                             model: DonViTinh,
+//                             attributes: ['TenDonVi']
+//                         },
+//                         {
+//                             model: ChiTietSanPham,
+//                             attributes: ['LoaiChiTiet', 'Gia', 'SoLuong']
+//                         }
+//                     ]
+//                 }
+//             ]
+//         });
+
+//         // Tính tổng số lượng sản phẩm trong giỏ hàng
+//         const totalQuantity = cartDetails.reduce((total, item) => total + item.SoLuong, 0);
+
+//         const cartWithImages = cartDetails.map(item => {
+//             const productData = item.SanPham.toJSON();
+//             const images = productData.HinhAnhSanPhams.map(img => img.DuongDanHinh);
+
+//             const sortedDetails = Array.isArray(productData.ChiTietSanPhams)
+//                 ? productData.ChiTietSanPhams.sort((a, b) => a.ChiTietSanPhamId - b.ChiTietSanPhamId)
+//                 : []; // Nếu không có, trả về mảng rỗng
+
+//             return {
+//                 SanPhamId: productData.SanPhamId,
+//                 TenSanPham: productData.TenSanPham,
+//                 Gia: sortedDetails.map(detail => ({
+//                     LoaiChiTiet: detail.LoaiChiTiet,
+//                     Gia: detail.Gia,
+//                     SoLuong: detail.SoLuong
+//                 })),
+//                 SoLuong: item.SoLuong,
+//                 TenDonVi: productData.DonViTinh ? productData.DonViTinh.TenDonVi : null,
+//                 DuongDanHinh: images
+//             };
+//         });
+
+//         return { 
+//             message: 'Giỏ hàng hiện tại của bạn:', 
+//             status: 'success', 
+//             cart: cartWithImages,
+//             totalQuantity // Trả về tổng số lượng sản phẩm
+//         };
+//     } catch (error) {
+//         console.error('Lỗi khi lấy giỏ hàng:', error);
+//         return {
+//             message: 'Có lỗi xảy ra khi lấy giỏ hàng.',
+//             status: 'error',
+//             cartDetails: [],
+//             totalQuantity: 0
+//         };
+//     }
+// };
+
+
 const getCart = async (userId) => {
     console.log('NguoiDungId:', userId); // Kiểm tra NguoiDungId
 
@@ -25,7 +111,7 @@ const getCart = async (userId) => {
                 message: 'Giỏ hàng trống.',
                 status: 'warning',
                 cartDetails: [],
-                totalQuantity: 0 // Trả về số lượng sản phẩm là 0
+                totalQuantity: 0
             };
         }
 
@@ -34,17 +120,21 @@ const getCart = async (userId) => {
             include: [
                 {
                     model: SanPham,
-                    attributes: ['SanPhamId', 'TenSanPham', 'Gia', 'MoTa', 'SoLuongKho','DonViTinhID'],
+                    attributes: ['SanPhamId', 'TenSanPham', 'MoTa', 'DonViTinhID'],
                     include: [
                         {
                             model: HinhAnhSanPham,
                             attributes: ['DuongDanHinh']
                         },
                         {
-                            model: DonViTinh, // Thêm mô hình LoaiSanPham
-                            attributes: ['TenDonVi'], // Chỉ lấy thuộc tính TenLoai
+                            model: DonViTinh,
+                            attributes: ['TenDonVi']
+                        },
+                        {
+                            model: ChiTietSanPham,
+                            attributes: ['LoaiChiTiet', 'Gia', 'SoLuong', 'ChiTietSanPhamId'] // Đảm bảo bạn lấy thêm ChiTietSanPhamId
                         }
-                    ],
+                    ]
                 }
             ]
         });
@@ -53,19 +143,30 @@ const getCart = async (userId) => {
         const totalQuantity = cartDetails.reduce((total, item) => total + item.SoLuong, 0);
 
         const cartWithImages = cartDetails.map(item => {
-            const sanPham = item.SanPham;
-            const images = sanPham.HinhAnhSanPhams.map(img => img.DuongDanHinh);
-            return {
-                SanPhamId: sanPham.SanPhamId,
-                TenSanPham: sanPham.TenSanPham,
-                Gia: sanPham.Gia,
-                MoTa: sanPham.MoTa,
-                SoLuongKho: sanPham.SoLuongKho,
-                SoLuong: item.SoLuong,
-                TenDonVi: sanPham.DonViTinh  ? sanPham.DonViTinh.TenDonVi : null,
-                DuongDanHinh: images
-            };
-        });
+            const productData = item.SanPham.toJSON();
+            const images = productData.HinhAnhSanPhams.map(img => img.DuongDanHinh);
+
+            // Lọc chi tiết sản phẩm theo ID đã chọn (ChitietSanPhamId)
+            const selectedDetail = productData.ChiTietSanPhams.find(detail => detail.ChiTietSanPhamId === item.ChiTietSanPhamId);
+
+            if (selectedDetail) {
+                return {
+                    SanPhamId: productData.SanPhamId,
+                    TenSanPham: productData.TenSanPham,
+                    Gia: {
+                        ChiTietSanPhamId: selectedDetail.ChiTietSanPhamId,
+                        LoaiChiTiet: selectedDetail.LoaiChiTiet,
+                        Gia: selectedDetail.Gia,
+                        SoLuong: selectedDetail.SoLuong
+                    },
+                    SoLuong: item.SoLuong,
+                    TenDonVi: productData.DonViTinh ? productData.DonViTinh.TenDonVi : null,
+                    DuongDanHinh: images
+                };
+            }
+
+            return null; // Nếu không tìm thấy chi tiết sản phẩm đã chọn, trả về null
+        }).filter(item => item !== null); // Loại bỏ những item null nếu không tìm thấy chi tiết
 
         return { 
             message: 'Giỏ hàng hiện tại của bạn:', 
@@ -75,11 +176,11 @@ const getCart = async (userId) => {
         };
     } catch (error) {
         console.error('Lỗi khi lấy giỏ hàng:', error);
-        return { // Đảm bảo trả về đối tượng mặc định khi có lỗi
+        return {
             message: 'Có lỗi xảy ra khi lấy giỏ hàng.',
             status: 'error',
             cartDetails: [],
-            totalQuantity: 0 // Trả về số lượng sản phẩm là 0 trong trường hợp có lỗi
+            totalQuantity: 0
         };
     }
 };
@@ -202,7 +303,23 @@ const getCart = async (userId) => {
 
 
 
-const addToCart = async (req, SanPhamId, SoLuong) => {
+const addToCart = async (req, SanPhamId, SoLuong, ChiTietSanPhamId) => {
+    // Kiểm tra xem SanPhamId và ChiTietSanPhamId đã được cung cấp chưa
+    if (!SanPhamId || !ChiTietSanPhamId) {
+        return { message: 'SanPhamId và ChiTietSanPhamId không được cung cấp.', status: 400 };
+    }
+
+    // Kiểm tra xem sản phẩm và chi tiết sản phẩm có tồn tại trong cơ sở dữ liệu không
+    const existingProduct = await SanPham.findOne({ where: { SanPhamId } });
+    if (!existingProduct) {
+        return { message: 'Sản phẩm không tồn tại.', status: 404 };
+    }
+
+    const existingDetail = await ChiTietSanPham.findOne({ where: { ChiTietSanPhamId } });
+    if (!existingDetail) {
+        return { error: 'Vui lòng chọn chi tiết sản phẩm trước.', status: 201 };
+    }
+
     // Lấy token từ cookie
     const token = req.cookies.ss_account;
 
@@ -215,7 +332,7 @@ const addToCart = async (req, SanPhamId, SoLuong) => {
             userId = decoded.id; // Lấy NguoiDungId từ token
         } catch (error) {
             console.error('Token không hợp lệ:', error);
-            return null; // Trả về null hoặc xử lý lỗi tùy ý
+            return { message: 'Token không hợp lệ.', status: 401 };
         }
     }
 
@@ -225,27 +342,30 @@ const addToCart = async (req, SanPhamId, SoLuong) => {
         const existingCart = await GioHang.findOne({ where: { NguoiDungId: userId } });
 
         if (existingCart) {
-            // Nếu giỏ hàng đã tồn tại, thêm hoặc cập nhật sản phẩm trong giỏ hàng
-            const existingProduct = await ChiTietGioHang.findOne({
+            // Kiểm tra xem ChiTietSanPhamId và SanPhamId đã có trong giỏ hàng chưa
+            const existingProductInCart = await ChiTietGioHang.findOne({
                 where: {
                     GioHangId: existingCart.GioHangId,
-                    SanPhamId: SanPhamId
+                    SanPhamId: SanPhamId,
+                    ChiTietSanPhamId: ChiTietSanPhamId // Kiểm tra ChiTietSanPhamId trong giỏ hàng
                 }
             });
 
-            if (existingProduct) {
+            if (existingProductInCart) {
                 // Cập nhật số lượng nếu sản phẩm đã có trong giỏ hàng
-                existingProduct.SoLuong += SoLuong;
-                await existingProduct.save();
+                existingProductInCart.SoLuong += SoLuong;
+                await existingProductInCart.save();
+                return { message: 'Sản phẩm đã được cập nhật trong giỏ hàng!', existingCartId: existingCart.GioHangId, SanPhamId, SoLuong, ChiTietSanPhamId, status: 'success' };
             } else {
                 // Thêm sản phẩm mới vào giỏ hàng
                 await ChiTietGioHang.create({
                     GioHangId: existingCart.GioHangId,
                     SanPhamId: SanPhamId,
-                    SoLuong: SoLuong
+                    SoLuong: SoLuong,
+                    ChiTietSanPhamId: ChiTietSanPhamId
                 });
+                return { message: 'Đã Thêm Sản Phẩm vào giỏ hàng!', existingCartId: existingCart.GioHangId, SanPhamId, SoLuong, ChiTietSanPhamId, status: 'success' };
             }
-            return { existingCartId: existingCart.GioHangId, SanPhamId, SoLuong };
         } else {
             // Tạo giỏ hàng mới cho người dùng đã đăng nhập
             const newCart = await GioHang.create({
@@ -257,16 +377,19 @@ const addToCart = async (req, SanPhamId, SoLuong) => {
             await ChiTietGioHang.create({
                 GioHangId: newCart.GioHangId,
                 SanPhamId: SanPhamId,
-                SoLuong: SoLuong
+                SoLuong: SoLuong,
+                ChiTietSanPhamId: ChiTietSanPhamId
             });
 
-            return { newCartId: newCart.GioHangId, SanPhamId, SoLuong };
+            return { message: 'Giỏ hàng mới đã được tạo và sản phẩm đã được thêm!', newCartId: newCart.GioHangId, SanPhamId, SoLuong, ChiTietSanPhamId, status: 'success' };
         }
     } else {
         console.error('Người dùng chưa đăng nhập hoặc không có User ID.');
-        return null; // Trả về null hoặc xử lý lỗi tùy ý
+        return { message: 'Người dùng chưa đăng nhập.', status: 401 }; // Trả về thông báo người dùng chưa đăng nhập
     }
 };
+
+
 
 
 // const deleteCartProduct = async (sanPhamId) => {
@@ -291,7 +414,7 @@ const addToCart = async (req, SanPhamId, SoLuong) => {
 //     return { message: 'Sản phẩm đã được xóa khỏi giỏ hàng.', deletedProduct };
 // };
 
-const deleteCartProduct = async (req, SanPhamId) => {
+const deleteCartProduct = async (req, SanPhamId, ChiTietSanPhamId) => {
     // Lấy token từ cookie
     const token = req.cookies.ss_account;
 
@@ -314,16 +437,17 @@ const deleteCartProduct = async (req, SanPhamId) => {
         const existingCart = await GioHang.findOne({ where: { NguoiDungId: userId } });
 
         if (existingCart) {
-            // Xóa sản phẩm khỏi giỏ hàng
+            // Xóa sản phẩm khỏi giỏ hàng dựa trên cả SanPhamId và ChiTietSanPhamId
             const deletedProduct = await ChiTietGioHang.destroy({
                 where: {
                     GioHangId: existingCart.GioHangId,
-                    SanPhamId: SanPhamId
+                    SanPhamId: SanPhamId,
+                    ChiTietSanPhamId: ChiTietSanPhamId // Thêm điều kiện ChiTietSanPhamId
                 }
             });
 
             if (deletedProduct === 0) {
-                return { message: 'Sản phẩm không tồn tại trong giỏ hàng.', status: 'warning' };
+                return { message: 'Sản phẩm không tồn tại trong giỏ hàng hoặc chi tiết sản phẩm không hợp lệ.', status: 'warning' };
             }
 
             return { message: 'Sản phẩm đã được xóa khỏi giỏ hàng.', status: 'success' };
@@ -335,6 +459,7 @@ const deleteCartProduct = async (req, SanPhamId) => {
         return { message: 'Người dùng chưa đăng nhập.', status: 'error' };
     }
 };
+
 
 
 

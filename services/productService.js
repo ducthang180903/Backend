@@ -3,11 +3,12 @@ const HinhAnhSanPham = require('../models/imgproductModel'); // Nhập mô hình
 const LoaiSanPham = require('../models/producttypeModel'); // Nhập mô hình HinhAnhSanPham
 const { Op } = require('sequelize');
 const DonViTinh = require('../models/donViTinhModel');
+const ChiTietSanPham = require('../models/chitietsanphamModels');
 
 
 // Hàm tạo sản phẩm
 const createProduct = async (productData, hinhAnhFiles) => {
-    const { TenSanPham, MoTa, Gia, SoLuongKho, LoaiSanPhamId, DonViTinhID  } = productData;
+    const { TenSanPham, MoTa, LoaiSanPhamId, DonViTinhID  } = productData;
     // Kiểm tra xem loại sản phẩm đã tồn tại hay chưa
     const existingLoaiSanPham = await LoaiSanPham.findOne({ where: { LoaiSanPhamId } });
     if (!existingLoaiSanPham) {
@@ -27,8 +28,6 @@ const createProduct = async (productData, hinhAnhFiles) => {
     const newProduct = await SanPham.create({
         TenSanPham,
         MoTa,
-        Gia,
-        SoLuongKho,
         LoaiSanPhamId,
         DonViTinhID,
     });
@@ -42,11 +41,11 @@ SanPhamId: newProduct.SanPhamId,
 // Xử lý các promise để thêm tất cả hình ảnh
     await Promise.all(hinhAnhPromises);
 
-    return { message: 'Sản phẩm đã được tạo thành công!', sanPhamId: newProduct.SanPhamId, status: 'success' };
+    return { success: 'Sản phẩm đã được tạo thành công!', sanPhamId: newProduct.SanPhamId, status: 200 };
 };
 
 const updateProduct = async (id, productData) => {
-    const { TenSanPham, MoTa, Gia, SoLuongKho, LoaiSanPhamId,DonViTinhID, HinhAnh } = productData;
+    const { TenSanPham, MoTa, LoaiSanPhamId,DonViTinhID, HinhAnh } = productData;
 
     // Kiểm tra xem tên sản phẩm đã tồn tại hay chưa
     const existingProduct = await SanPham.findOne({
@@ -65,8 +64,6 @@ const updateProduct = async (id, productData) => {
         {
             TenSanPham,
             MoTa,
-            Gia,
-            SoLuongKho,
             LoaiSanPhamId,
             DonViTinhID
         },
@@ -114,20 +111,37 @@ const deleteProduct = async (productId) => {
 
 const getAllProducts = async () => {
     const products = await SanPham.findAll({
-        include: [{
-            model: HinhAnhSanPham,
-            attributes: ['DuongDanHinh'], // Chỉ lấy đường dẫn hình ảnh
-        }],
+        include: [
+            {
+                model: HinhAnhSanPham,
+                attributes: ['DuongDanHinh'], // Chỉ lấy đường dẫn hình ảnh
+            },
+            {
+                model: ChiTietSanPham, // Thêm chi tiết sản phẩm vào truy vấn
+                attributes: [ 'ChiTietSanPhamId','LoaiChiTiet', 'Gia', 'SoLuong'], // Chỉ lấy loại chi tiết, giá và số lượng
+            },
+        ],
     });
 
     return products.map(product => {
         const productData = product.toJSON();
+
+        // Kiểm tra xem ChiTietSanPhams có tồn tại không và là một mảng
+        const sortedDetails = Array.isArray(productData.ChiTietSanPhams)
+            ? productData.ChiTietSanPhams.sort((a, b) => a.ChiTietSanPhamId - b.ChiTietSanPhamId)
+            : []; // Nếu không có, trả về mảng rỗng
+
         return {
             SanPhamId: productData.SanPhamId,
             TenSanPham: productData.TenSanPham,
             MoTa: productData.MoTa,
-            Gia: productData.Gia,
-            SoLuongKho: productData.SoLuongKho,
+            // Chỉ lấy giá và loại chi tiết đã sắp xếp
+            Gia: sortedDetails.map(detail => ({
+                ChiTietSanPhamId:detail.ChiTietSanPhamId,
+                LoaiChiTiet: detail.LoaiChiTiet,
+                Gia: detail.Gia,
+                SoLuong: detail.SoLuong,
+            })),
             ThoiGianTao: productData.ThoiGianTao,
             ThoiGianCapNhat: productData.ThoiGianCapNhat,
             LoaiSanPhamId: productData.LoaiSanPhamId,
@@ -136,6 +150,8 @@ const getAllProducts = async () => {
         };
     });
 };
+
+
 
 const searchProductsByName = async (name, minPrice, maxPrice, loaiSanPhamId) => {
     try {
@@ -208,10 +224,16 @@ const getProductById = async (sanPhamId) => {
         include: [{
             model: HinhAnhSanPham,
             attributes: ['DuongDanHinh'], // Chỉ lấy đường dẫn hình ảnh
-        }, {
+        },
+         {
             model: LoaiSanPham, // Thêm mô hình LoaiSanPham
             attributes: ['TenLoai'], // Chỉ lấy thuộc tính TenLoai
-        }, {
+        },
+        {
+            model: ChiTietSanPham, // Thêm chi tiết sản phẩm vào truy vấn
+            attributes: ['ChiTietSanPhamId','LoaiChiTiet', 'Gia', 'SoLuong'], // Chỉ lấy loại chi tiết, giá và số lượng
+        },
+         {
             model: DonViTinh, // Thêm mô hình LoaiSanPham
             attributes: ['TenDonVi'], // Chỉ lấy thuộc tính TenLoai
         }],
@@ -223,12 +245,23 @@ const getProductById = async (sanPhamId) => {
 
     // Chuyển đổi dữ liệu thành cấu trúc mong muốn
     const productData = product.toJSON();
+ 
+
+    // Kiểm tra xem ChiTietSanPhams có tồn tại không và là một mảng
+    const sortedDetails = Array.isArray(productData.ChiTietSanPhams)
+        ? productData.ChiTietSanPhams.sort((a, b) => a.ChiTietSanPhamId - b.ChiTietSanPhamId)
+        : []; // Nếu không có, trả về mảng rỗng
+
     return {
         SanPhamId: productData.SanPhamId,
         TenSanPham: productData.TenSanPham,
         MoTa: productData.MoTa,
-        Gia: productData.Gia,
-        SoLuongKho: productData.SoLuongKho,
+        Gia: sortedDetails.map(detail => ({
+            ChiTietSanPhamId: detail.ChiTietSanPhamId,
+            LoaiChiTiet: detail.LoaiChiTiet,
+            Gia: detail.Gia,
+            SoLuong: detail.SoLuong,
+        })),
         ThoiGianTao: productData.ThoiGianTao,
         ThoiGianCapNhat: productData.ThoiGianCapNhat,
         TenLoai: productData.LoaiSanPham ? productData.LoaiSanPham.TenLoai : null, // Lấy TenLoai từ mô hình LoaiSanPham

@@ -64,7 +64,7 @@ const deleteproducttype = async (req, res) => {
         const response = await deleteDVT(id);
 
         if (response.status === 'warning') {
-            return res.status(404).json(response); // Sử dụng 404 cho trường hợp không tìm thấy
+            return res.status(201).json(response); // Sử dụng 404 cho trường hợp không tìm thấy
         }
 
         res.status(200).json(response);

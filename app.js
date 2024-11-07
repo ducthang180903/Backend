@@ -76,7 +76,9 @@ app.use('/api', producttypeRoutes);
 // Nạp route của loại sản phẩm
 const DVTRoutes = require('./routes/donvitinhRoutes');
 app.use('/api', DVTRoutes);
-
+// Sử dụng route
+const chitietsanphamRoutes = require('./routes/chitietsanphamRoutes');
+app.use('/api', chitietsanphamRoutes);
 // Nạp route của sản phẩm
 const productRoutes0 = require('./routes/productRoutes');
 app.use('/api', productRoutes0);
