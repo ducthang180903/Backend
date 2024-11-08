@@ -32,6 +32,6 @@ const upload = multer({
         }
     },
     limits: { fileSize: 5 * 1024 * 1024 } // 5 MB
-}).single('HinhAnh'); // Sử dụng single để upload 1 file
+}).array('HinhAnh'); // Sử dụng single để upload 1 file
 
 module.exports = upload;

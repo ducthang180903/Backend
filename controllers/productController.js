@@ -22,9 +22,9 @@ const getproduct = async (req, res) => {
 const postproduct = async (req, res) => {
     const { TenSanPham, MoTa, Gia, SoLuongKho, LoaiSanPhamId } = req.body;
     // Nếu sử dụng single hình
-    const HinhAnh = req.file ? [req.file.filename] : [];
+    // const HinhAnh = req.file ? [req.file.filename] : [];
     // Nếu sử dụng nhiều hình
-    // const HinhAnh = req.files ? req.files.map(file => file.filename) : [];
+    const HinhAnh = req.files ? req.files.map(file => file.filename) : [];
     // console.log('check: ', HinhAnh);
 
     if (HinhAnh.length === 0) {
@@ -85,11 +85,7 @@ const deleteImageFile = (imagePath) => {
 const putproduct = async (req, res) => {
     const { id } = req.params; // Lấy id từ params
     const { TenSanPham, MoTa, Gia, SoLuongKho, LoaiSanPhamId } = req.body;
-    // Nếu sử dụng single hình
-    const HinhAnh = req.file ? [req.file.filename] : [];
-    // Nếu sử dụng nhiều hình
-    // const HinhAnh = req.files ? req.files.map(file => file.filename) : [];
-    // console.log('check: ', HinhAnh);
+    const HinhAnh = req.files ? req.files.map(file => file.filename) : [];
 
     if (HinhAnh.length === 0) {
         return res.status(201).json({ warning: 'Vui lòng thêm hình ảnh.' });
@@ -112,16 +108,20 @@ const putproduct = async (req, res) => {
             return res.status(201).json({ warning: 'Sản phẩm đã tồn tại.' });
         }
 
-        // Xóa các ảnh cũ nếu có ảnh mới
-        if (HinhAnh.length > 0) {
-            const oldImages = await HinhAnhSanPham.findAll({ where: { SanPhamId: id } });
-            oldImages.forEach(image => {
-                const imagePath = path.join(uploadPath, image.DuongDanHinh);
-                deleteImageFile(imagePath);
-            });
-        }
+        // Lấy các hình ảnh cũ trước khi xóa
+        const oldImages = await HinhAnhSanPham.findAll({ where: { SanPhamId: id } });
 
-        const updateProduct = await SanPham.update(
+        // Xóa các ảnh cũ khỏi cơ sở dữ liệu
+        await HinhAnhSanPham.destroy({ where: { SanPhamId: id } });
+
+        // Xóa các file hình ảnh cũ
+        oldImages.forEach(image => {
+            const imagePath = path.join(uploadPath, image.DuongDanHinh);
+            deleteImageFile(imagePath);
+        });
+
+        // Cập nhật thông tin sản phẩm
+        await SanPham.update(
             {
                 TenSanPham,
                 MoTa,
@@ -132,18 +132,16 @@ const putproduct = async (req, res) => {
             { where: { SanPhamId: id } }
         );
 
+        // Thêm các hình ảnh mới
         const hinhAnhPromises = HinhAnh.map(image => {
-            return HinhAnhSanPham.update(
-                {
-                    SanPhamId: updateProduct.SanPhamId,
-                    DuongDanHinh: image,
-                },
-                { where: { SanPhamId: id } }
-            );
+            return HinhAnhSanPham.create({
+                SanPhamId: id,
+                DuongDanHinh: image,
+            });
         });
 
         await Promise.all(hinhAnhPromises);
-        return res.status(200).json({ message: 'Sản phẩm đã được cập nhật thành công!', updateProduct });
+        return res.status(200).json({ message: 'Sản phẩm đã được cập nhật thành công!' });
 
     } catch (error) {
         res.status(500).json({ error: error.message }); // Xử lý lỗi
