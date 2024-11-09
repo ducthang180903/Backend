@@ -4,6 +4,7 @@ const fs = require('fs');
 const HinhAnhSanPham = require('../models/imgproductModel');
 const SanPham = require('../models/productModel');
 const LoaiSanPham = require('../models/producttypeModel');
+const DonViTinh = require('../models/donViTinhModel');
 const productService = require('../services/productService');
 const { Op } = require('sequelize');
 const uploadPath = path.join(__dirname, '../uploads/imgs/');
@@ -17,10 +18,19 @@ const getproduct = async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
 };
-
+// Hiển thị sản phẩm theo SanPhamId
+const getProductById = async (req, res) => {
+    try {
+        const { id } = req.params; // Lấy SanPhamId từ tham số URL
+        const product = await productService.getProductById(id); // Gọi hàm từ service
+        res.status(200).json(product); // Trả về dữ liệu sản phẩm
+    } catch (error) {
+        return res.status(404).json({ error: error.message }); // Trả lỗi nếu có
+    }
+};
 // Thêm sản phẩm (cùng với hình ảnh)
 const postproduct = async (req, res) => {
-    const { TenSanPham, MoTa, Gia, SoLuongKho, LoaiSanPhamId } = req.body;
+    const { TenSanPham, MoTa, LoaiSanPhamId, DonViTinhID } = req.body;
     // Nếu sử dụng single hình
     // const HinhAnh = req.file ? [req.file.filename] : [];
     // Nếu sử dụng nhiều hình
@@ -33,10 +43,14 @@ const postproduct = async (req, res) => {
 
     try {
         const existingLoaiSanPham = await LoaiSanPham.findOne({ where: { LoaiSanPhamId } });
+        const existingDonViTinh = await DonViTinh.findOne({ where: { DonViTinhID } });
         const existingProduct = await SanPham.findOne({ where: { TenSanPham } });
 
         if (!existingLoaiSanPham) {
             return res.status(201).json({ warning: 'Loại sản phẩm không tồn tại.' });
+        }
+        if (!existingDonViTinh) {
+            return res.status(201).json({ warning: 'Đơn Vị Tính không tồn tại.' });
         }
 
         if (existingProduct) {
@@ -47,9 +61,8 @@ const postproduct = async (req, res) => {
         const newProduct = await SanPham.create({
             TenSanPham,
             MoTa,
-            Gia,
-            SoLuongKho,
             LoaiSanPhamId,
+            DonViTinhID
         });
 
         // Thêm hình ảnh cho sản phẩm
@@ -84,7 +97,7 @@ const deleteImageFile = (imagePath) => {
 // Sửa sản phẩm
 const putproduct = async (req, res) => {
     const { id } = req.params; // Lấy id từ params
-    const { TenSanPham, MoTa, Gia, SoLuongKho, LoaiSanPhamId } = req.body;
+    const { TenSanPham, MoTa, LoaiSanPhamId, DonViTinhID } = req.body;
     const HinhAnh = req.files ? req.files.map(file => file.filename) : [];
 
     if (HinhAnh.length === 0) {
@@ -93,6 +106,7 @@ const putproduct = async (req, res) => {
 
     try {
         const existingLoaiSanPham = await LoaiSanPham.findOne({ where: { LoaiSanPhamId } });
+        const existingDonViTinh = await DonViTinh.findOne({ where: { DonViTinhID } });
         const existingProduct = await SanPham.findOne({
             where: {
                 TenSanPham,
@@ -102,6 +116,9 @@ const putproduct = async (req, res) => {
 
         if (!existingLoaiSanPham) {
             return res.status(201).json({ warning: 'Loại sản phẩm không tồn tại.' });
+        }
+        if (!existingDonViTinh) {
+            return res.status(201).json({ warning: 'Đơn Vị Tính không tồn tại.' });
         }
 
         if (existingProduct) {
@@ -125,9 +142,8 @@ const putproduct = async (req, res) => {
             {
                 TenSanPham,
                 MoTa,
-                Gia,
-                SoLuongKho,
-                LoaiSanPhamId
+                LoaiSanPhamId,
+                DonViTinhID,
             },
             { where: { SanPhamId: id } }
         );
@@ -213,5 +229,36 @@ const deleteproducts = async (req, res) => {
         res.status(500).json({ error: error.message }); // Xử lý lỗi
     }
 };
+const searchProducts = async (req, res) => {
+    const { name, minPrice, maxPrice, loaiSanPhamId } = req.query; // Lấy tên, giá từ query string
 
-module.exports = { getproduct, postproduct, putproduct, deleteproduct, deleteproducts };
+    try {
+        let products;
+
+        // Điều kiện lấy tất cả sản phẩm nếu không có tham số nào được cung cấp
+        if (!name && !minPrice && !maxPrice && !loaiSanPhamId) {
+            products = await productService.getAllProducts(); // Gọi hàm lấy tất cả sản phẩm
+        } else {
+            // Khởi tạo một đối tượng chứa các điều kiện tìm kiếm
+            const searchConditions = {
+                name: name || '', // Tên sản phẩm, mặc định là chuỗi rỗng
+                minPrice: minPrice ? parseFloat(minPrice) : null, // Giá tối thiểu
+                maxPrice: maxPrice ? parseFloat(maxPrice) : null, // Giá tối đa
+                loaiSanPhamId: loaiSanPhamId ? parseInt(loaiSanPhamId) : null // Loại sản phẩm ID
+            };
+
+            // Gọi hàm tìm kiếm từ service
+            products = await productService.searchProductsByName(
+                searchConditions.name,
+                searchConditions.minPrice,
+                searchConditions.maxPrice,
+                searchConditions.loaiSanPhamId
+            );
+        }
+
+        res.status(200).json(products); // Trả về danh sách sản phẩm
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+};
+module.exports = { getproduct, postproduct, putproduct, deleteproduct, deleteproducts, searchProducts, getProductById };

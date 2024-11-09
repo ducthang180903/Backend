@@ -217,7 +217,7 @@ const loginUser = async (req, res) => {
         // return res.json({ message: 'check: ', account_user });
         req.session.user = ss_account;
         await req.session.save()
-
+        // res.cookie('ss_account', ss_account, { httpOnly: true }); // Lưu token vào cookie
         return res.status(200).json({ message: 'Đăng nhập thành công.', ss_account, account_user });
 
     } catch (error) {
@@ -251,6 +251,59 @@ const logoutUser = async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
 };
+const updateUserNDSDT = async (req, res) => {
+    const { nguoiDungId } = req.params; // Lấy nguoiDungId từ tham số URL
+    const { TenDangNhap, MatKhau, Account, DiaChi, SoDienThoai, VaiTro } = req.body; // Lấy dữ liệu người dùng từ body
 
+    try {
+        const user = await User.findOne({
+            where: { NguoiDungId: nguoiDungId }
+        });
 
-module.exports = { getUsers, createUser, loginUser, deleteUser, deleteUsers, updateUser, checkLogin, logoutUser };
+        if (!user) {
+            return res.status(404).json({ warning: 'Người dùng không tồn tại.' });
+        }
+
+        // Kiểm tra xem tên đăng nhập hoặc tài khoản đã tồn tại trong cơ sở dữ liệu không
+        if (TenDangNhap && TenDangNhap !== user.TenDangNhap) {
+            const existingUser = await User.findOne({
+                where: { TenDangNhap, NguoiDungId: { [Op.ne]: nguoiDungId } }
+            });
+            if (existingUser) {
+                return res.status(400).json({ warning: 'Tên đăng nhập đã tồn tại.' });
+            }
+        }
+
+        if (Account && Account !== user.Account) {
+            const existingAccount = await User.findOne({
+                where: { Account, NguoiDungId: { [Op.ne]: nguoiDungId } }
+            });
+            if (existingAccount) {
+                return res.status(400).json({ warning: 'Tài khoản đã tồn tại.' });
+            }
+        }
+
+        // Mã hóa mật khẩu nếu có thay đổi mật khẩu
+        const hashedPassword = MatKhau ? await bcrypt.hash(MatKhau, 10) : user.MatKhau;
+
+        // Cập nhật thông tin chỉ khi có thay đổi
+        const updatedData = {};
+
+        if (DiaChi) updatedData.DiaChi = DiaChi;
+        if (SoDienThoai) updatedData.SoDienThoai = SoDienThoai;
+        if (MatKhau) updatedData.MatKhau = hashedPassword;
+        if (TenDangNhap) updatedData.TenDangNhap = TenDangNhap;
+        if (Account) updatedData.Account = Account;
+        if (VaiTro) updatedData.VaiTro = VaiTro;
+
+        await User.update(updatedData, {
+            where: { NguoiDungId: nguoiDungId },
+        });
+
+        return res.status(200).json({ message: 'Người dùng đã được cập nhật thành công!', updatedData });
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+};
+
+module.exports = { getUsers, createUser, loginUser, deleteUser, deleteUsers, updateUser, checkLogin, logoutUser, updateUserNDSDT };
