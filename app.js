@@ -11,7 +11,6 @@ const path = require('path');
 const apiRouter = require('./routes/apiRouter');
 const cartRouter = require('./routes/cartRoutes');
 const warehouseRoutes = require('./routes/warehouseRoutes');
-
 const sessionStore = new SequelizeStore({
   db: sequelize, // Sử dụng kết nối sequelize
 });
