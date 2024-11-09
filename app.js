@@ -14,6 +14,9 @@ const warehouseRoutes = require('./routes/warehouseRoutes');
 const sessionStore = new SequelizeStore({
   db: sequelize, // Sử dụng kết nối sequelize
 });
+require('./config/database');
+require('dotenv').config();
+
 const PORT = process.env.PORT || 8000;
 // Cấu hình CORS
 const corsOptions = {
@@ -23,13 +26,10 @@ const corsOptions = {
   credentials: true, // Cho phép gửi cookie và thông tin xác thực khác
   optionsSuccessStatus: 200 // Một số trình duyệt cũ gặp vấn đề với 204
 };
-require('./config/database');
-require('dotenv').config();
 
 const store = new SequelizeStore({
   db: sequelize, // Sử dụng Sequelize instance
 });
-
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
