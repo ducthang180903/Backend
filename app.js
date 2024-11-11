@@ -44,7 +44,7 @@ app.use(session({
   cookie: {
     secure: false,
     httpOnly: true, // Chỉ cho phép cookie được truy cập bởi HTTP
-    maxAge: 1000 * 60 * 30, // Thời gian sống của cookie (30 phút)
+    maxAge: 1000 * 60 * 60, // Thời gian sống của cookie (1h)
   }
 }));
 

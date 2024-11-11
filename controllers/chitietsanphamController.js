@@ -13,6 +13,7 @@ const fetchChiTietSanPham = async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
 };
+
 const showAllChiTietSanPham = async (req, res) => {
     try {
         const chiTietSanPhamList = await chitietsanpham.getAllChiTietSanPham();
@@ -30,20 +31,19 @@ const addChiTietSanPham = async (req, res) => {
     }
 
     try {
-        const newChiTietSanPham = await chitietsanpham.addChiTietSanPham(
+        await chitietsanpham.addChiTietSanPham(
             sanPhamId,
             loaiChiTiet,
             gia,
             soLuong
         );
 
-        return res.status(201).json({
-            success: 'Thêm chi tiết sản phẩm thành công',
-            result: newChiTietSanPham,
+        return res.status(200).json({
+            message: 'Thêm chi tiết sản phẩm thành công'
         });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json({ error: error.message });
     }
 };
 // Hàm sửa chi tiết sản phẩm
@@ -87,5 +87,5 @@ const deleteChiTietSanPham = async (req, res) => {
     }
 };
 module.exports = {
-    fetchChiTietSanPham,showAllChiTietSanPham ,addChiTietSanPham , updateChiTietSanPham , deleteChiTietSanPham
+    fetchChiTietSanPham, showAllChiTietSanPham, addChiTietSanPham, updateChiTietSanPham, deleteChiTietSanPham
 };

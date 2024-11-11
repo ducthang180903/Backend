@@ -36,7 +36,7 @@ const SanPham = sequelize.define('SanPham', {
             key: 'LoaiSanPhamId',
         },
     },
-    DonViTinhID:{
+    DonViTinhID: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
@@ -50,6 +50,7 @@ const SanPham = sequelize.define('SanPham', {
 });
 SanPham.belongsTo(LoaiSanPham, { foreignKey: 'LoaiSanPhamId' });
 SanPham.belongsTo(DonViTinh, { foreignKey: 'DonViTinhID' });
+
 
 // SanPham.hasMany(ChiTietSanPham, { foreignKey: 'SanPhamId' });
 // Thiết lập mối quan hệ chỉ sử dụng belongsTo
@@ -76,7 +77,7 @@ SanPham.belongsTo(DonViTinh, { foreignKey: 'DonViTinhID' });
 //         foreignKey: 'SanPhamId',
 //         onDelete: 'CASCADE',
 //     });
- 
+
 //     SanPham.hasMany(models.ChiTietDonHangDaDangNhap, {
 //         foreignKey: 'SanPhamId',
 //         onDelete: 'CASCADE',

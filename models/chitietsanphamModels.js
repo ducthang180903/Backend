@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
-const SanPham = require('./productModel');
+const sequelize = require('../config/database'); // Đảm bảo đường dẫn đúng tới tệp cấu hình cơ sở dữ liệu
+const SanPham = require('./productModel'); // Import mô hình SanPham
 
 const ChiTietSanPham = sequelize.define('ChiTietSanPham', {
   ChiTietSanPhamId: {
@@ -35,15 +35,16 @@ const ChiTietSanPham = sequelize.define('ChiTietSanPham', {
     defaultValue: DataTypes.NOW,
   },
   ThoiGianCapNhat: {
-    type: DataTypes.DATE, 
+    type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
     onUpdate: DataTypes.NOW,
   },
 }, {
-  tableName: 'chitietsanpham',
+  tableName: 'ChiTietSanPham', // Đảm bảo tên bảng đúng
   timestamps: false,
 });
 
+// Thiết lập mối quan hệ
 ChiTietSanPham.belongsTo(SanPham, { foreignKey: 'SanPhamId' });
 SanPham.hasMany(ChiTietSanPham, { foreignKey: 'SanPhamId' });
 

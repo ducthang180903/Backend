@@ -7,7 +7,8 @@ const LoaiSanPham = require('../models/producttypeModel');
 const DonViTinh = require('../models/donViTinhModel');
 const productService = require('../services/productService');
 const { Op } = require('sequelize');
-const uploadPath = path.join(__dirname, '../uploads/imgs/');
+const ChiTietSanPham = require('../models/chitietsanphamModels');
+const uploadPath = path.join(__dirname, 'uploads/imgs/');
 
 // Hiển thị tất cả sản phẩm cùng với hình ảnh
 const getproduct = async (req, res) => {
@@ -30,7 +31,7 @@ const getProductById = async (req, res) => {
 };
 // Thêm sản phẩm (cùng với hình ảnh)
 const postproduct = async (req, res) => {
-    const { TenSanPham, MoTa, LoaiSanPhamId, DonViTinhID } = req.body;
+    const { TenSanPham, MoTa, LoaiSanPhamId, DonViTinhID, LoaiChiTiet, Gia, SoLuong } = req.body;
     // Nếu sử dụng single hình
     // const HinhAnh = req.file ? [req.file.filename] : [];
     // Nếu sử dụng nhiều hình
@@ -65,6 +66,13 @@ const postproduct = async (req, res) => {
             DonViTinhID
         });
 
+        await ChiTietSanPham.create({
+            SanPhamId: newProduct.SanPhamId,
+            LoaiChiTiet,
+            Gia,
+            SoLuong
+        });
+
         // Thêm hình ảnh cho sản phẩm
         const hinhAnhPromises = HinhAnh.map(image => {
             return HinhAnhSanPham.create({
@@ -97,7 +105,7 @@ const deleteImageFile = (imagePath) => {
 // Sửa sản phẩm
 const putproduct = async (req, res) => {
     const { id } = req.params; // Lấy id từ params
-    const { TenSanPham, MoTa, LoaiSanPhamId, DonViTinhID } = req.body;
+    const { TenSanPham, MoTa, LoaiSanPhamId, DonViTinhID, LoaiChiTiet, Gia, SoLuong } = req.body;
     const HinhAnh = req.files ? req.files.map(file => file.filename) : [];
 
     if (HinhAnh.length === 0) {
@@ -138,15 +146,22 @@ const putproduct = async (req, res) => {
         });
 
         // Cập nhật thông tin sản phẩm
-        await SanPham.update(
+        const newProduct = await SanPham.update(
             {
                 TenSanPham,
                 MoTa,
                 LoaiSanPhamId,
-                DonViTinhID,
+                DonViTinhID
             },
             { where: { SanPhamId: id } }
         );
+
+        await ChiTietSanPham.create({
+            SanPhamId: id,
+            LoaiChiTiet,
+            Gia,
+            SoLuong
+        });
 
         // Thêm các hình ảnh mới
         const hinhAnhPromises = HinhAnh.map(image => {
@@ -157,7 +172,7 @@ const putproduct = async (req, res) => {
         });
 
         await Promise.all(hinhAnhPromises);
-        return res.status(200).json({ message: 'Sản phẩm đã được cập nhật thành công!' });
+        return res.status(200).json({ message: 'Sản phẩm đã được cập nhật thành công!', newProduct });
 
     } catch (error) {
         res.status(500).json({ error: error.message }); // Xử lý lỗi

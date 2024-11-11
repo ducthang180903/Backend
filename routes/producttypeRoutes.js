@@ -22,7 +22,7 @@ productTypeRouter.delete('/loaisp/:id', async (req, res) => {
     return await deleteproducttype(req, res);
 });
 
-productTypeRouter.post('/delete', async (req, res) => {
+productTypeRouter.post('/loaisp/delete', async (req, res) => {
     return await deleteproducttypes(req, res);
 });
 

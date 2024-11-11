@@ -42,13 +42,13 @@ const ChiTietGioHang = sequelize.define('ChiTietGioHang', {
         onDelete: 'CASCADE',
     },
 }, {
-    tableName: 'ChiTietGioHang', // Chỉ định rõ tên bảng
-    timestamps: false, // Tắt tự động thêm createdAt và updatedAt
+    tableName: 'ChiTietGioHang',
+    timestamps: false,
 });
 
-// Mối quan hệ với bảng `SanPham`
-// ChiTietGioHang.belongsTo(SanPham, {foreignKey: 'SanPhamId',});
-// SanPham.hasMany(ChiTietGioHang, { foreignKey: 'SanPhamId' });
-
+// Định nghĩa mối quan hệ
+ChiTietGioHang.belongsTo(GioHang, { foreignKey: 'GioHangId' });
+ChiTietGioHang.belongsTo(SanPham, { foreignKey: 'SanPhamId' });
+ChiTietGioHang.belongsTo(ChiTietSanPham, { foreignKey: 'ChiTietSanPhamId' });
 
 module.exports = ChiTietGioHang;

@@ -5,18 +5,18 @@ const { Op } = require('sequelize');
 const DonViTinh = require('../models/donViTinhModel');
 const ChiTietSanPham = require('../models/chitietsanphamModels');
 const createProduct = async (productData) => {
-    const { TenSanPham, MoTa,  LoaiSanPhamId, DonViTinhID, HinhAnh } = productData;
+    const { TenSanPham, MoTa, LoaiSanPhamId, DonViTinhID, LoaiChiTiet, Gia, SoLuong, HinhAnh } = productData;
 
     // Kiểm tra xem loại sản phẩm đã tồn tại hay chưa
     const existingLoaiSanPham = await LoaiSanPham.findOne({ where: { LoaiSanPhamId } });
     if (!existingLoaiSanPham) {
         return { warning: 'Loại sản phẩm không tồn tại.', status: 201, sanPhamId: null };
     }
- // Kiểm tra xem Donvitinh đã tồn tại hay chưa
- const existingDonViTinh = await DonViTinh.findOne({ where: { DonViTinhID } });
- if (!existingDonViTinh) {
-     return { warning: 'Đơn Vị Tính không tồn tại.', status: 201, sanPhamId: null };
- }
+    // Kiểm tra xem Donvitinh đã tồn tại hay chưa
+    const existingDonViTinh = await DonViTinh.findOne({ where: { DonViTinhID } });
+    if (!existingDonViTinh) {
+        return { warning: 'Đơn Vị Tính không tồn tại.', status: 201, sanPhamId: null };
+    }
     // Kiểm tra xem sản phẩm đã tồn tại hay chưa
     const existingProduct = await SanPham.findOne({ where: { TenSanPham } });
     if (existingProduct) {
@@ -29,6 +29,13 @@ const createProduct = async (productData) => {
         MoTa,
         LoaiSanPhamId,
         DonViTinhID,
+    });
+
+    await ChiTietSanPham.create({
+        SanPhamId: newProduct.SanPhamId,
+        LoaiChiTiet,
+        Gia,
+        SoLuong,
     });
 
     // Thêm hình ảnh cho sản phẩm
@@ -45,53 +52,6 @@ const createProduct = async (productData) => {
     return { message: 'Sản phẩm đã được tạo thành công!', sanPhamId: newProduct.SanPhamId, status: 'success' };
 };
 
-const updateProduct = async (id, productData) => {
-    const {  TenSanPham, MoTa, LoaiSanPhamId,DonViTinhID, HinhAnh } = productData;
-
-    // Kiểm tra xem tên sản phẩm đã tồn tại hay chưa
-    const existingProduct = await SanPham.findOne({
-        where: {
-            TenSanPham,
-            SanPhamId: { [Op.ne]: id }
-        }
-    });
-
-    if (existingProduct) {
-        return { warning: 'Tên sản phẩm đã tồn tại.', status: 201 };
-    }
-
-    // Cập nhật sản phẩm
-    const [updatedRows] = await SanPham.update(
-        {
-            TenSanPham,
-            MoTa,
-            LoaiSanPhamId,
-            DonViTinhID
-        },
-        { where: { SanPhamId: id } }
-    );
-
-    if (updatedRows === 0) {
-        return { warning: 'Sản phẩm không tồn tại.', status: 201 };
-    }
-
-    // Xóa hình ảnh cũ và thêm hình ảnh mới
-    await HinhAnhSanPham.destroy({ where: { SanPhamId: id } });
-
-    if (HinhAnh && HinhAnh.length > 0) {
-        const hinhAnhPromises = HinhAnh.map(image =>
-            HinhAnhSanPham.create({
-                SanPhamId: id,
-                DuongDanHinh: image
-            })
-        );
-
-        // Xử lý các promise để thêm tất cả hình ảnh mới
-        await Promise.all(hinhAnhPromises);
-    }
-
-    return { message: 'Sản phẩm đã được cập nhật thành công!', status: 200 };
-};
 
 // xóa sản phẩm
 const deleteProduct = async (productId) => {
@@ -117,24 +77,29 @@ const getAllProducts = async () => {
             attributes: ['DuongDanHinh'], // Chỉ lấy đường dẫn hình ảnh
         }, {
             model: ChiTietSanPham, // Thêm chi tiết sản phẩm vào truy vấn
-            attributes: [ 'ChiTietSanPhamId','LoaiChiTiet', 'Gia', 'SoLuong'], // Chỉ lấy loại chi tiết, giá và số lượng
+            attributes: ['ChiTietSanPhamId', 'LoaiChiTiet', 'Gia', 'SoLuong'], // Chỉ lấy loại chi tiết, giá và số lượng
         },
-    ],
+        {
+            model: DonViTinh, // Thêm DonViTinh vào truy vấn
+            attributes: ['DonViTinhID', 'TenDonVi'], // Chỉ lấy DonViTinhID và TenDonVi
+        }
+        ],
     });
 
+    // return products;
     // Chuyển đổi dữ liệu thành cấu trúc mong muốn
     return products.map(product => {
         const productData = product.toJSON();
         const sortedDetails = Array.isArray(productData.ChiTietSanPhams)
-        ? productData.ChiTietSanPhams.sort((a, b) => a.ChiTietSanPhamId - b.ChiTietSanPhamId)
-        : []; // Nếu không có, trả về mảng rỗng
+            ? productData.ChiTietSanPhams.sort((a, b) => a.ChiTietSanPhamId - b.ChiTietSanPhamId)
+            : []; // Nếu không có, trả về mảng rỗng
         return {
             // Chỉ lấy các thuộc tính cần thiết của sản phẩm
             SanPhamId: productData.SanPhamId,
             TenSanPham: productData.TenSanPham,
             MoTa: productData.MoTa,
-            Gia: sortedDetails.map(detail => ({
-                ChiTietSanPhamId:detail.ChiTietSanPhamId,
+            PhanLoai: sortedDetails.map(detail => ({
+                ChiTietSanPhamId: detail.ChiTietSanPhamId,
                 LoaiChiTiet: detail.LoaiChiTiet,
                 Gia: detail.Gia,
                 SoLuong: detail.SoLuong,
@@ -142,9 +107,9 @@ const getAllProducts = async () => {
             ThoiGianTao: productData.ThoiGianTao,
             ThoiGianCapNhat: productData.ThoiGianCapNhat,
             LoaiSanPhamId: productData.LoaiSanPhamId,
+            DonViTinhID: productData.DonViTinhID,
             // Chỉ hiển thị HinhAnh
-            HinhAnh: productData.HinhAnhSanPhams.map(image => image.DuongDanHinh), // Chuyển hình ảnh thành mảng
-            HinhAnh: productData.HinhAnhSanPhams.map(image => `http://localhost:8000/api/${image.DuongDanHinh.replace(/\\/g, '/')}`),
+            HinhAnh: productData.HinhAnhSanPhams
         };
     });
 };
@@ -218,19 +183,20 @@ const getProductById = async (sanPhamId) => {
             model: HinhAnhSanPham,
             attributes: ['DuongDanHinh'], // Chỉ lấy đường dẫn hình ảnh
         },
-         {
+        {
             model: LoaiSanPham, // Thêm mô hình LoaiSanPham
             attributes: ['TenLoai'], // Chỉ lấy thuộc tính TenLoai
         },
         {
             model: ChiTietSanPham, // Thêm chi tiết sản phẩm vào truy vấn
-            attributes: ['ChiTietSanPhamId','LoaiChiTiet', 'Gia', 'SoLuong'], // Chỉ lấy loại chi tiết, giá và số lượng
+            attributes: ['ChiTietSanPhamId', 'LoaiChiTiet', 'Gia', 'SoLuong'], // Chỉ lấy loại chi tiết, giá và số lượng
         },
-         {
+        {
             model: DonViTinh, // Thêm mô hình LoaiSanPham
             attributes: ['TenDonVi'], // Chỉ lấy thuộc tính TenLoai
         }],
     });
+    // return product
 
     if (!product) {
         throw new Error('Sản phẩm không tồn tại'); // Xử lý trường hợp sản phẩm không tồn tại
@@ -238,7 +204,7 @@ const getProductById = async (sanPhamId) => {
 
     // Chuyển đổi dữ liệu thành cấu trúc mong muốn
     const productData = product.toJSON();
- 
+
 
     // Kiểm tra xem ChiTietSanPhams có tồn tại không và là một mảng
     const sortedDetails = Array.isArray(productData.ChiTietSanPhams)
@@ -258,11 +224,10 @@ const getProductById = async (sanPhamId) => {
         ThoiGianTao: productData.ThoiGianTao,
         ThoiGianCapNhat: productData.ThoiGianCapNhat,
         TenLoai: productData.LoaiSanPham ? productData.LoaiSanPham.TenLoai : null, // Lấy TenLoai từ mô hình LoaiSanPham
-        TenDonVi: productData.DonViTinh  ? productData.DonViTinh.TenDonVi : null,
-        // Chỉ hiển thị HinhAnh
-        HinhAnh: productData.HinhAnhSanPhams.map(image => `http://localhost:8000/api/${image.DuongDanHinh.replace(/\\/g, '/')}`), // Cập nhật đường dẫn hình ảnh
+        TenDonVi: productData.DonViTinh ? productData.DonViTinh.TenDonVi : null,
+        HinhAnh: productData.HinhAnhSanPhams
     };
 };
 
 
-module.exports = { createProduct, updateProduct, deleteProduct, getAllProducts , searchProductsByName , getProductById};
+module.exports = { createProduct, deleteProduct, getAllProducts, searchProductsByName, getProductById };
