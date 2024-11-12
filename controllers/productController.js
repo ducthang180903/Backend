@@ -7,6 +7,7 @@ const LoaiSanPham = require('../models/producttypeModel');
 const DonViTinh = require('../models/donViTinhModel');
 const productService = require('../services/productService');
 const { Op } = require('sequelize');
+const ChiTietGioHang = require('../models/chitietgiohangModels');
 const ChiTietSanPham = require('../models/chitietsanphamModels');
 const uploadPath = path.join(__dirname, 'uploads/imgs/');
 
@@ -196,6 +197,9 @@ const deleteproduct = async (req, res) => {
             deleteImageFile(imagePath);
         });
 
+        await ChiTietGioHang.destroy({ where: { ChiTietSanPhamId: { [Op.in]: await ChiTietSanPham.findAll({ where: { SanPhamId: id }, attributes: ['ChiTietSanPhamId'] }).then(details => details.map(detail => detail.ChiTietSanPhamId)) } } });
+        await ChiTietSanPham.destroy({ where: { SanPhamId: id } });
+
         await HinhAnhSanPham.destroy({ where: { SanPhamId: id } });
         await SanPham.destroy({ where: { SanPhamId: id } });
 
@@ -215,7 +219,7 @@ const deleteproducts = async (req, res) => {
     try {
         // Tìm tất cả ảnh liên quan đến sản phẩm
         const images = await HinhAnhSanPham.findAll({
-            where: { SanPhamId: data }
+            where: { SanPhamId: { [Op.in]: data } }
         });
 
         // Xóa file ảnh trên hệ thống
@@ -226,12 +230,19 @@ const deleteproducts = async (req, res) => {
 
         // Xóa tất cả các ảnh liên quan trước
         await HinhAnhSanPham.destroy({
-            where: { SanPhamId: data }
+            where: { SanPhamId: { [Op.in]: data } }
+        });
+        await ChiTietGioHang.destroy({
+            where: { ChiTietSanPhamId: { [Op.in]: await ChiTietSanPham.findAll({ where: { SanPhamId: { [Op.in]: data } }, attributes: ['ChiTietSanPhamId'] }).then(details => details.map(detail => detail.ChiTietSanPhamId)) } }
+        }
+        );
+        await ChiTietSanPham.destroy({
+            where: { SanPhamId: { [Op.in]: data } }
         });
 
         const deleteProduct = await SanPham.destroy({
             where: {
-                SanPhamId: data
+                SanPhamId: { [Op.in]: data } // Sử dụng Op.in để xóa nhiều sản phẩm
             }
         });
 
