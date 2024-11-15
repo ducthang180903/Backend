@@ -1,6 +1,7 @@
 const LoaiSanPham = require('../models/producttypeModel');
 const { Op } = require('sequelize');
 const { createProductCategory, getAllProductTypes, updateProductType, deleteProductType } = require('../services/producttypeService');
+const SanPham = require('../models/productModel');
 
 // Lấy tất cả loại sản phẩm
 const getproducttype = async (req, res) => {
@@ -80,6 +81,15 @@ const deleteproducttype = async (req, res) => {
     const { id } = req.params;
 
     try {
+        // Kiểm tra xem có sản phẩm nào liên kết với loại sản phẩm này không
+        const countRelatedProducts = await SanPham.count({
+            where: { LoaiSanPhamId: id },
+        });
+
+        if (countRelatedProducts > 0) {
+            return res.status(201).json({ warning: 'Không thể xóa loại sản phẩm này vì có sản phẩm liên kết.' });
+        }
+
         const deleted = await LoaiSanPham.destroy({
             where: { LoaiSanPhamId: id },
         });
@@ -94,28 +104,38 @@ const deleteproducttype = async (req, res) => {
     }
 };
 
+
 const deleteproducttypes = async (req, res) => {
     const data = req.body;
 
     if (!Array.isArray(data) || data.length === 0) {
-        return res.status(201).json({ warning: "Danh sách sản phẩm không hợp lệ!" });
+        return res.status(201).json({ warning: "Danh sách loại sản phẩm không hợp lệ!" });
     }
 
     try {
-        const deleted = await LoaiSanPham.destroy({
-            where: { LoaiSanPhamId: data },
-        });
+        for (const id of data) {
+            const countRelatedProducts = await SanPham.count({
+                where: { LoaiSanPhamId: id },
+            });
 
-        if (deleted === 0) {
-            return res.status(201).json({ warning: 'Loại sản phẩm không tồn tại.' });
+            if (countRelatedProducts > 0) {
+                return res.status(201).json({ warning: 'Không thể xóa loại sản phẩm này vì có sản phẩm liên kết.' });
+            }
+
+            // Nếu không có sản phẩm liên kết, tiến hành xóa
+            const deleted = await LoaiSanPham.destroy({
+                where: { LoaiSanPhamId: id },
+            });
+
+            if (deleted === 0) {
+                return res.status(201).json({ warning: 'Loại sản phẩm không tồn tại.' });
+            }
         }
 
-
-        return res.status(200).json({ message: `Đã xóa thành công ${deleted} loại sản phẩm.` });
+        return res.status(200).json({ message: `Đã xóa thành công ${data.length} loại sản phẩm.` });
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
 };
-
 
 module.exports = { getproducttype, postproducttype, putproducttype, deleteproducttype, deleteproducttypes };

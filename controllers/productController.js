@@ -106,9 +106,10 @@ const deleteImageFile = (imagePath) => {
 // Sửa sản phẩm
 const putproduct = async (req, res) => {
     const { id } = req.params; // Lấy id từ params
-    const { TenSanPham, MoTa, LoaiSanPhamId, DonViTinhID, LoaiChiTiet, Gia, SoLuong } = req.body;
-    const HinhAnh = req.files ? req.files.map(file => file.filename) : [];
+    const { TenSanPham, MoTa, LoaiSanPhamId, DonViTinhID, ChiTietSanPhamId, LoaiChiTiet, Gia, SoLuong } = req.body;
 
+    // return res.json(ChiTietSanPhamId);
+    const HinhAnh = req.files ? req.files.map(file => file.filename) : [];
     if (HinhAnh.length === 0) {
         return res.status(201).json({ warning: 'Vui lòng thêm hình ảnh.' });
     }
@@ -157,12 +158,14 @@ const putproduct = async (req, res) => {
             { where: { SanPhamId: id } }
         );
 
-        await ChiTietSanPham.create({
-            SanPhamId: id,
-            LoaiChiTiet,
-            Gia,
-            SoLuong
-        });
+        await ChiTietSanPham.update(
+            {
+                LoaiChiTiet,
+                Gia,
+                SoLuong
+            },
+            { where: { ChiTietSanPhamId } }
+        );
 
         // Thêm các hình ảnh mới
         const hinhAnhPromises = HinhAnh.map(image => {

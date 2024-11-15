@@ -1,4 +1,4 @@
-const ChiTietSanPham = require('../models/chitietsanphamModels'); 
+const ChiTietSanPham = require('../models/chitietsanphamModels');
 const SanPham = require('../models/productModel'); // Chắc chắn rằng đường dẫn là đúng
 const HinhAnhSanPham = require('../models/imgproductModel');
 
@@ -48,7 +48,7 @@ const getAllChiTietSanPham = async () => {
             ],
         });
 
-        return { success: 'Lấy danh sách chi tiết sản phẩm thành công', status: 200, data: chiTietSanPhamList };
+        return { message: 'Lấy danh sách chi tiết sản phẩm thành công', status: 200, data: chiTietSanPhamList };
     } catch (error) {
         return { warning: `Lỗi khi lấy danh sách chi tiết sản phẩm: ${error.message}`, status: 201 };
     }

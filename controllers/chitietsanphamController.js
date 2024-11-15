@@ -54,16 +54,15 @@ const updateChiTietSanPham = async (req, res) => {
 
     try {
         // Gọi service để cập nhật chi tiết sản phẩm
-        const updatedChiTietSanPham = await chitietsanpham.updateChiTietSanPham(id, sanPhamId, loaiChiTiet, gia, soLuong);
+        await chitietsanpham.updateChiTietSanPham(id, sanPhamId, loaiChiTiet, gia, soLuong);
 
         // Trả về kết quả
         res.status(200).json({
-            success: 'Chi tiết sản phẩm đã được cập nhật thành công',
-            data: updatedChiTietSanPham,
+            message: 'Chi tiết sản phẩm đã được cập nhật thành công'
         });
     } catch (error) {
         res.status(500).json({
-            warning: `Lỗi khi cập nhật chi tiết sản phẩm: ${error.warning}`,
+            error: `Lỗi khi cập nhật chi tiết sản phẩm: ${error.message}`,
         });
     }
 };
@@ -73,12 +72,11 @@ const deleteChiTietSanPham = async (req, res) => {
 
     try {
         // Gọi service để xóa chi tiết sản phẩm
-        const deletedChiTietSanPham = await chitietsanpham.deleteChiTietSanPham(id);
+        await chitietsanpham.deleteChiTietSanPham(id);
 
         // Trả về kết quả
         res.status(200).json({
-            success: 'Chi tiết sản phẩm đã được xóa thành công',
-            data: deletedChiTietSanPham,
+            message: 'Chi tiết sản phẩm đã được xóa thành công'
         });
     } catch (error) {
         res.status(500).json({
