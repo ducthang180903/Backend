@@ -9,6 +9,7 @@ const { Op, Sequelize } = require('sequelize'); // Nhập Sequelize và Op từ 
 const jwt = require('jsonwebtoken');
 const DonViTinh = require('../models/donViTinhModel');
 const ChiTietSanPham = require('../models/chitietsanphamModels');
+const { verifyToken } = require('../middlewares/authMiddleware');
 
 const getCart = async (userId) => {
     // console.log('NguoiDungId:', userId); // Kiểm tra NguoiDungId
@@ -183,6 +184,49 @@ const addToCart = async (req, SanPhamId, SoLuong, ChiTietSanPhamId) => {
     }
 };
 
+const updateCartProduct = async (req, SanPhamId, ChiTietSanPhamId, SoLuong) => {
+    const token = req.session.user;
+    let userId = null;
+
+    if (token) {
+        try {
+            const decoded = verifyToken(token);
+            userId = decoded.id;
+            // console.log('check: ', user);
+
+        } catch (error) {
+            console.error('Token không hợp lệ:', error);
+            return { warning: 'Token không hợp lệ.', status: 404 };
+        }
+    }
+
+    if (userId) {
+        const existingCart = await GioHang.findOne({ where: { NguoiDungId: userId } });
+
+        if (existingCart) {
+            const existingProductInCart = await ChiTietGioHang.findOne({
+                where: {
+                    GioHangId: existingCart.GioHangId,
+                    SanPhamId: SanPhamId,
+                    ChiTietSanPhamId: ChiTietSanPhamId
+                }
+            });
+
+            if (existingProductInCart) {
+                existingProductInCart.SoLuong = SoLuong;
+                await existingProductInCart.save();
+                return { message: 'Sản phẩm trong giỏ hàng đã được cập nhật!', status: 200 };
+            } else {
+                return { warning: 'Sản phẩm không tồn tại trong giỏ hàng.', status: 201 };
+            }
+        } else {
+            return { warning: 'Giỏ hàng không tồn tại.' };
+        }
+    } else {
+        return { warning: 'Người dùng chưa đăng nhập.', status: 201 };
+    }
+};
+
 const deleteCartProduct = async (req, SanPhamId, ChiTietSanPhamId) => {
     // Lấy token từ cookie
     const token = req.cookies.ss_account;
@@ -232,5 +276,6 @@ const deleteCartProduct = async (req, SanPhamId, ChiTietSanPhamId) => {
 module.exports = {
     getCart,
     addToCart,
+    updateCartProduct,
     deleteCartProduct
 };

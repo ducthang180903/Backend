@@ -5,6 +5,36 @@ const SanPham = require('../models/productModel');
 const jwt = require('jsonwebtoken');
 const { verifyToken } = require('../config/jwt');
 
+const getCart = async (req, res) => {
+    const token = req.session.user;
+    // return res.json({ token })
+    if (!token) {
+        return res.status(401).json({
+            warning: 'Người dùng chưa đăng nhập.',
+            cartDetails: []
+        });
+    }
+
+    try {
+        const user = verifyToken(token);
+        // return res.json(user.id)
+        const cartData = await cartService.getCart(user.id); // Gọi service với NguoiDungId
+        // return res.json({ cartData })
+        // Kiểm tra cartData để đảm bảo nó không bị undefined
+        if (!cartData) {
+            return res.status(500).json({
+                error: 'Có lỗi xảy ra khi lấy giỏ hàng.',
+            });
+        }
+
+        return res.status(200).json(cartData?.cart);
+    } catch (error) {
+        return res.status(500).json({
+            error: error.message || 'Có lỗi xảy ra trong quá trình xử lý.',
+        });
+    }
+};
+
 const postcartProducts = async (req, res) => {
     try {
         // Lấy sản phẩm và số lượng từ request body
@@ -41,14 +71,34 @@ const postcartProducts = async (req, res) => {
     }
 };
 
+const updateCartProduct = async (req, res) => {
+    const { SanPhamId, ChiTietSanPhamId, SoLuong } = req.body;
+
+    if (!SanPhamId || !ChiTietSanPhamId || !SoLuong) {
+        return res.status(201).json({ warning: 'Cần cung cấp SanPhamId, ChiTietSanPhamId và SoLuong.' });
+    }
+
+    try {
+        const result = await cartService.updateCartProduct(req, SanPhamId, ChiTietSanPhamId, SoLuong);
+        if (result.status === 200) {
+            return res.status(200).json({ message: result.message });
+        } else {
+            return res.status(201).json({ warning: result.warning });
+        }
+    } catch (error) {
+        console.error('Lỗi khi cập nhật sản phẩm trong giỏ hàng:', error);
+        return res.status(500).json({ error: 'Đã xảy ra lỗi khi cập nhật sản phẩm trong giỏ hàng.' });
+    }
+};
+
 const deleteCartProduct = async (req, res) => {
-    const { SanPhamId, ChiTietSanPhamId } = req.body;  // Lấy SanPhamId và ChiTietSanPhamId từ request body
+    const { SanPhamId, ChiTietSanPhamId } = req.params;  // Lấy SanPhamId và ChiTietSanPhamId từ request body
 
     // Kiểm tra xem SanPhamId và ChiTietSanPhamId có được cung cấp hay không
     if (!SanPhamId || !ChiTietSanPhamId) {
-        return res.status(400).json({ message: 'Cần cung cấp SanPhamId và ChiTietSanPhamId.', status: 'error' });
+        return res.status(400).json({ warning: 'Cần cung cấp SanPhamId và ChiTietSanPhamId.' });
     }
-
+    // return res.json({ SanPhamId, ChiTietSanPhamId })
     try {
         // Gọi hàm deleteCartProduct từ service, truyền vào req và các tham số cần thiết
         const result = await cartService.deleteCartProduct(req, SanPhamId, ChiTietSanPhamId);
@@ -57,46 +107,17 @@ const deleteCartProduct = async (req, res) => {
         if (result.status === 'success') {
             return res.status(200).json({ message: result.message });
         } else if (result.status === 'warning') {
-            return res.status(404).json({ message: result.message });
+            return res.status(201).json({ warning: result.warning });
         } else {
-            return res.status(401).json({ message: result.message });
+            return res.status(401).json({ warning: result.warning });
         }
     } catch (error) {
         console.error('Lỗi khi xóa sản phẩm khỏi giỏ hàng:', error);
-        return res.status(500).json({ message: 'Đã xảy ra lỗi khi xóa sản phẩm khỏi giỏ hàng.' });
+        return res.status(500).json({ error: 'Đã xảy ra lỗi khi xóa sản phẩm khỏi giỏ hàng.' });
     }
 };
 
-const getCart = async (req, res) => {
-    const token = req.session.user;
-    // return res.json({ token })
-    if (!token) {
-        return res.status(401).json({
-            warning: 'Người dùng chưa đăng nhập.',
-            cartDetails: []
-        });
-    }
-
-    try {
-        const user = verifyToken(token);
-        // return res.json(user.id)
-        const cartData = await cartService.getCart(user.id); // Gọi service với NguoiDungId
-        // return res.json({ cartData })
-        // Kiểm tra cartData để đảm bảo nó không bị undefined
-        if (!cartData) {
-            return res.status(500).json({
-                error: 'Có lỗi xảy ra khi lấy giỏ hàng.',
-            });
-        }
-
-        return res.status(200).json(cartData?.cart);
-    } catch (error) {
-        return res.status(500).json({
-            error: error.message || 'Có lỗi xảy ra trong quá trình xử lý.',
-        });
-    }
-};
 
 module.exports = {
-    postcartProducts, getCart, deleteCartProduct
+    postcartProducts, getCart, updateCartProduct, deleteCartProduct
 };

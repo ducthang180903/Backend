@@ -9,6 +9,24 @@ const verifyToken = (token) => {
         return null;
     }
 }
+const checkLogin = (req, res, next) => {
+    const tokenUser = req.session.user;
+    if (tokenUser) {
+        const decodedToken = verifyToken(tokenUser);
+        // console.log('check token: ', token);
+
+        if (!decodedToken) {
+            res.status(404).json({ warning: 'Token không hợp lệ!' });
+            return;
+        }
+
+        req.user = decodedToken;
+        // console.log('check user token: ', req.user);
+        next();
+    } else {
+        return res.status(404).json({ warning: 'Bạn chưa đăng nhập!' });
+    }
+}
 
 const checkRole = (requiredRoles) => async (req, res, next) => {
     const userID = req.session.user;
@@ -42,6 +60,7 @@ const isManager = checkRole(['quanly', 'admin']);
 
 module.exports = {
     verifyToken,
+    checkLogin,
     isAdmin,
     isManager
 }

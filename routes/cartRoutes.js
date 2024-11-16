@@ -1,24 +1,23 @@
 const express = require('express');
-const { postcartProducts,getCart, deleteCartProduct  } = require('../controllers/cartController');
+const { postcartProducts, getCart, deleteCartProduct, updateCartProduct } = require('../controllers/cartController');
 const cartRoutes = express.Router();
 
+cartRoutes.get('/', async (req, res) => {
+    return await getCart(req, res);
+});
 
-// Route để thêm SP
-// router.post('/cart', postcartProducts);
-cartRoutes.post('/cart', async (req, res) => {
+cartRoutes.post('/', async (req, res) => {
     return await postcartProducts(req, res);
 });
-// Route để thêm SP
-// router.delete('/cart/:sanPhamId', deleteCartProduct);
-cartRoutes.delete('/cart/:sanPhamId', async (req, res) => {
+
+cartRoutes.put('/', async (req, res) => {
+    return await updateCartProduct(req, res);
+});
+
+cartRoutes.delete('/:SanPhamId/:ChiTietSanPhamId', async (req, res) => {
     return await deleteCartProduct(req, res);
 });
 
-// Route để thêm SP
-// router.get('/cart', getCart);
 
-cartRoutes.get('/cart', async (req, res) => {
-    return await getCart(req, res);
-});
-// ,deleteCartProduct , getCart
+
 module.exports = cartRoutes;

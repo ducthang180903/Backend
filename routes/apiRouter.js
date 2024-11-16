@@ -8,7 +8,7 @@ const donvitinhRoutes = require('./donvitinhRoutes');
 const cartRoutes = require('./cartRoutes');
 const donhangRoutes = require('./donhangRoutes');
 const chitietsanphamRoutes = require('./chitietsanphamRoutes');
-const { isAdmin, isManager } = require('../middlewares/authMiddleware');
+const { isAdmin, isManager, checkLogin } = require('../middlewares/authMiddleware');
 const apiRouter = express.Router();
 
 apiRouter.use('/', loginsignupRouter);
@@ -19,7 +19,7 @@ apiRouter.use('/', producttypeRoutes);
 apiRouter.use('/', donvitinhRoutes);
 apiRouter.use('/', donhangRoutes);
 apiRouter.use('/', chitietsanphamRoutes);
-apiRouter.use('/', cartRoutes);
+apiRouter.use('/cart', checkLogin, cartRoutes);
 // apiRouter.use('/DVT', donvitinhRoutes);
 // apiRouter.use('/', donhangRoutes);
 // apiRouter.use('/', chitietsanphamRoutes);
