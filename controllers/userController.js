@@ -1,6 +1,4 @@
-// controllers/userController.js
-const pool = require('../config/database');
-const { generateToken } = require('../config/jwt');
+const { generateToken, generateTokenInfo } = require('../config/jwt');
 const User = require('../models/userModel');
 const UserService = require('../services/userService'); // Đường dẫn có thể thay đổi tùy vào cấu trúc thư mục của bạn
 const bcrypt = require('bcryptjs');
@@ -206,6 +204,9 @@ const loginUser = async (req, res) => {
             return res.status(201).json({ warning: 'Tài khoản không tồn tại.' }); // Nếu trùng lặp
         }
 
+        const TenDangNhap = user.TenDangNhap;
+        const DiaChi = user.DiaChi;
+        const SoDienThoai = user.SoDienThoai;
         const isMatch = await bcrypt.compare(MatKhau, user.MatKhau);
 
         if (!isMatch) {
@@ -213,7 +214,8 @@ const loginUser = async (req, res) => {
         }
 
         const ss_account = generateToken(user.NguoiDungId, user.Account);
-        const account_user = user.TenDangNhap;
+        const account_user = generateTokenInfo(TenDangNhap, DiaChi, SoDienThoai);
+
         // return res.json({ message: 'check: ', account_user });
         req.session.user = ss_account;
         await req.session.save()
