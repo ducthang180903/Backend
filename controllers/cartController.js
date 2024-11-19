@@ -91,14 +91,39 @@ const updateCartProduct = async (req, res) => {
     }
 };
 
+// const deleteCartProduct = async (req, res) => {
+//     const { SanPhamId, ChiTietSanPhamId } = req.params;  // Lấy SanPhamId và ChiTietSanPhamId từ request body
+
+//     // Kiểm tra xem SanPhamId và ChiTietSanPhamId có được cung cấp hay không
+//     if (!SanPhamId || !ChiTietSanPhamId) {
+//         return res.status(400).json({ warning: 'Cần cung cấp SanPhamId và ChiTietSanPhamId.' });
+//     }
+//     // return res.json({ SanPhamId, ChiTietSanPhamId })
+//     try {
+//         // Gọi hàm deleteCartProduct từ service, truyền vào req và các tham số cần thiết
+//         const result = await cartService.deleteCartProduct(req, SanPhamId, ChiTietSanPhamId);
+
+//         // Kiểm tra kết quả từ service và phản hồi với status code tương ứng
+//         if (result.status === 'success') {
+//             return res.status(200).json({ message: result.message });
+//         } else if (result.status === 'warning') {
+//             return res.status(201).json({ warning: result.warning });
+//         } else {
+//             return res.status(401).json({ warning: result.warning });
+//         }
+//     } catch (error) {
+//         console.error('Lỗi khi xóa sản phẩm khỏi giỏ hàng:', error);
+//         return res.status(500).json({ error: 'Đã xảy ra lỗi khi xóa sản phẩm khỏi giỏ hàng.' });
+//     }
+// };
 const deleteCartProduct = async (req, res) => {
-    const { SanPhamId, ChiTietSanPhamId } = req.params;  // Lấy SanPhamId và ChiTietSanPhamId từ request body
+    const { SanPhamId, ChiTietSanPhamId } = req.body;  // Lấy SanPhamId và ChiTietSanPhamId từ request body
 
     // Kiểm tra xem SanPhamId và ChiTietSanPhamId có được cung cấp hay không
     if (!SanPhamId || !ChiTietSanPhamId) {
-        return res.status(400).json({ warning: 'Cần cung cấp SanPhamId và ChiTietSanPhamId.' });
+        return res.status(400).json({ message: 'Cần cung cấp SanPhamId và ChiTietSanPhamId.', status: 'error' });
     }
-    // return res.json({ SanPhamId, ChiTietSanPhamId })
+
     try {
         // Gọi hàm deleteCartProduct từ service, truyền vào req và các tham số cần thiết
         const result = await cartService.deleteCartProduct(req, SanPhamId, ChiTietSanPhamId);
@@ -107,16 +132,15 @@ const deleteCartProduct = async (req, res) => {
         if (result.status === 'success') {
             return res.status(200).json({ message: result.message });
         } else if (result.status === 'warning') {
-            return res.status(201).json({ warning: result.warning });
+            return res.status(201).json({ message: result.message });
         } else {
-            return res.status(401).json({ warning: result.warning });
+            return res.status(201).json({ message: result.message });
         }
     } catch (error) {
         console.error('Lỗi khi xóa sản phẩm khỏi giỏ hàng:', error);
-        return res.status(500).json({ error: 'Đã xảy ra lỗi khi xóa sản phẩm khỏi giỏ hàng.' });
+        return res.status(500).json({ message: 'Đã xảy ra lỗi khi xóa sản phẩm khỏi giỏ hàng.' });
     }
 };
-
 
 module.exports = {
     postcartProducts, getCart, updateCartProduct, deleteCartProduct

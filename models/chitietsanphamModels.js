@@ -21,6 +21,10 @@ const ChiTietSanPham = sequelize.define('ChiTietSanPham', {
     type: DataTypes.STRING(100),
     allowNull: false,
   },
+  MoTaChiTiet: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+},
   Gia: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,

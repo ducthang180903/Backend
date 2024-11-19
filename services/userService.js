@@ -1,6 +1,7 @@
 const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 const { Op } = require('sequelize');
+const jwt = require('jsonwebtoken');
 
 
 //đăng ký tài khoản người dùng
@@ -78,12 +79,26 @@ const login = async (userData, req) => {
 
 };
 const checkLoginStatus = (req) => {
-    // Kiểm tra nếu req và req.session tồn tại
     if (req && req.session && req.session.user) {
-        return {
-            loggedIn: true,
-            user: req.session.user,
-        };
+        // Lấy token từ session hoặc header
+        const token = req.cookies.ss_account;
+        if (!token) return { loggedIn: false };
+
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            return {
+                loggedIn: true,
+                user: {
+                    NguoiDungId: decoded.id, // Lấy NguoiDungId từ token
+                    Account: decoded.Account, // Lấy tài khoản từ token
+                    MatKhau: decoded.MatKhau, // Nếu cần thiết
+                },
+            };
+        } catch (err) {
+            return {
+                loggedIn: false,
+            };
+        }
     }
     return {
         loggedIn: false,

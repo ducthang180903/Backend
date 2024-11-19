@@ -14,7 +14,7 @@ cartRoutes.put('/', async (req, res) => {
     return await updateCartProduct(req, res);
 });
 
-cartRoutes.delete('/:SanPhamId/:ChiTietSanPhamId', async (req, res) => {
+cartRoutes.delete('/cart', async (req, res) => {
     return await deleteCartProduct(req, res);
 });
 

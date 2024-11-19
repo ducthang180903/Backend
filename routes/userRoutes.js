@@ -1,11 +1,13 @@
 const express = require('express');
 const userRouter = express.Router();
-const { updateUser, deleteUser, checkLogin, logoutUser, createUser, deleteUsers, getUsers ,updateUserNDSDT } = require('../controllers/userController');
+const { updateUser, deleteUser, checkLogin, logoutUser, createUser, deleteUsers, getUsers ,updateUserNDSDT,getUserById } = require('../controllers/userController');
 
 userRouter.get('/', async (req, res) => {
     return await getUsers(req, res);
 });
-
+userRouter.get('/:nguoiDungId', async (req, res) => {
+    return await getUserById(req, res);
+});
 userRouter.post('/', async (req, res) => {
     return await createUser(req, res);
 });
@@ -26,7 +28,7 @@ userRouter.post('/delete', async (req, res) => {
     return await deleteUsers(req, res);
 });
 
-userRouter.get('/check-login', async (req, res) => {
+userRouter.get('/uesrs/check-login', async (req, res) => {
     return await checkLogin(req, res);
 });
 

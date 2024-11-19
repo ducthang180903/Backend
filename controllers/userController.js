@@ -70,9 +70,9 @@ const updateUser = async (req, res) => {
     if (!TenDangNhap) {
         return res.status(201).json({ warning: 'Vui lòng nhập tên đăng nhập.' })
     }
-    if (!MatKhau) {
-        return res.status(201).json({ warning: 'Vui lòng nhập mật khẩu.' })
-    }
+    // if (!MatKhau) {
+    //     return res.status(201).json({ warning: 'Vui lòng nhập mật khẩu.' })
+    // }
     if (!Account) {
         return res.status(201).json({ warning: 'Vui lòng nhập tài khoản.' })
     }
@@ -217,7 +217,7 @@ const loginUser = async (req, res) => {
         // return res.json({ message: 'check: ', account_user });
         req.session.user = ss_account;
         await req.session.save()
-        // res.cookie('ss_account', ss_account, { httpOnly: true }); // Lưu token vào cookie
+        // res.cookie('account_user', ss_account, { httpOnly: true }); // Lưu token vào cookie
         return res.status(200).json({ message: 'Đăng nhập thành công.', ss_account, account_user });
 
     } catch (error) {
@@ -305,5 +305,25 @@ const updateUserNDSDT = async (req, res) => {
         return res.status(400).json({ message: error.message });
     }
 };
+const getUserById = async (req, res) => {
+    const { nguoiDungId } = req.params; // Lấy NguoiDungId từ tham số đường dẫn
 
-module.exports = { getUsers, createUser, loginUser, deleteUser, deleteUsers, updateUser, checkLogin, logoutUser, updateUserNDSDT };
+    try {
+        // Tìm người dùng theo NguoiDungId
+        const user = await User.findOne({
+            where: { NguoiDungId: nguoiDungId }, // Điều kiện tìm kiếm
+            attributes: ['NguoiDungId', 'TenDangNhap', 'Account', 'DiaChi', 'SoDienThoai', 'VaiTro'] // Lấy các trường cần thiết
+        });
+
+        // Kiểm tra xem người dùng có tồn tại không
+        if (!user) {
+            return res.status(404).json({ error: 'Người dùng không tồn tại' }); // Nếu không tìm thấy người dùng
+        }
+
+        return res.status(200).json(user); // Trả kết quả về cho client
+
+    } catch (error) {
+        return res.status(500).json({ error: 'Lỗi truy vấn cơ sở dữ liệu', message: error.message }); // Xử lý lỗi nếu có
+    }
+};
+module.exports = { getUsers, createUser, loginUser, deleteUser, deleteUsers, updateUser, checkLogin, logoutUser, updateUserNDSDT,getUserById };
