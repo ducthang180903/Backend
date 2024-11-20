@@ -3,6 +3,8 @@
 const DonHangDaDangNhap = require('../models/DonHangDaDangNhap');
 const NguoiDung = require('../models/userModel');
 const ChiTietDonHangDaDangNhap = require('../models/ChiTietDonHangDaDangNhap');
+const GioHang = require('../models/cartModels');
+const ChiTietGioHang = require('../models/chitietgiohangModels');
 
 exports.createDonHang = async (NguoiDungId, TongTien, TrangThai, chiTietSanPhamList) => {
   try {
@@ -18,7 +20,7 @@ exports.createDonHang = async (NguoiDungId, TongTien, TrangThai, chiTietSanPhamL
 
     // Kiểm tra nếu người dùng chưa cung cấp đầy đủ thông tin (Địa chỉ và Số điện thoại)
     if (!nguoiDung.DiaChi || !nguoiDung.SoDienThoai) {
-      return { warning: 'Người dùng chưa cung cấp đầy đủ thông tin (Địa chỉ và Số điện thoại)', status: (201) };
+      return { warning: 'Người dùng chưa cung cấp đầy đủ thông tin (Địa chỉ và Số điện thoại)', status: 201 };
     }
 
     // Tạo đơn hàng
@@ -39,6 +41,20 @@ exports.createDonHang = async (NguoiDungId, TongTien, TrangThai, chiTietSanPhamL
       });
     }
 
+    // Xóa sản phẩm khỏi giỏ hàng sau khi tạo đơn hàng thành công
+    const existingCart = await GioHang.findOne({ where: { NguoiDungId } });
+    if (existingCart) {
+      for (const chiTiet of chiTietSanPhamList) {
+        await ChiTietGioHang.destroy({
+          where: {
+            GioHangId: existingCart.GioHangId,
+            SanPhamId: chiTiet.SanPhamId,
+            ChiTietSanPhamId: chiTiet.ChiTietSanPhamId,
+          }
+        });
+      }
+    }
+
     // Trả về thông báo thành công và thông tin đơn hàng
     return {
       message: 'Thanh Toán thành công!',
@@ -49,7 +65,7 @@ exports.createDonHang = async (NguoiDungId, TongTien, TrangThai, chiTietSanPhamL
   } catch (error) {
     // Xử lý lỗi nếu có
     console.error('Error creating don hang in service:', error);
-    return { warning: 'Đã có lỗi xảy ra khi tạo đơn hàng', status: 201 };
+    return { warning: error.message, status: 201 };
   }
 };
 

@@ -22,7 +22,7 @@ exports.createDonHang = async (req, res) => {
 
     // Nếu không có cảnh báo, trả về thông báo thành công
     return res.status(200).json({
-      success: donHangResult.success,
+      message: donHangResult.message,
       donHang: donHangResult.donHang,
     });
 

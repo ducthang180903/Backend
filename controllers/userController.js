@@ -1,4 +1,4 @@
-const { generateToken, generateTokenInfo } = require('../config/jwt');
+const { generateToken, generateTokenInfo, verifyToken } = require('../config/jwt');
 const User = require('../models/userModel');
 const UserService = require('../services/userService'); // Đường dẫn có thể thay đổi tùy vào cấu trúc thư mục của bạn
 const bcrypt = require('bcryptjs');
@@ -14,6 +14,30 @@ const getUsers = async (req, res) => {
 
     } catch (error) {
         return res.status(500).json({ error: 'Lỗi truy vấn cơ sở dữ liệu', error: error.message }); // Xử lý lỗi nếu có
+    }
+};
+
+const getUserById = async (req, res) => {
+    const token = req.session.user;
+    const nguoiDungId = verifyToken(token);
+    // return res.json({ 'check': nguoiDungId.id })
+    try {
+        // Tìm người dùng theo NguoiDungId
+        const user = await User.findOne({
+            where: { NguoiDungId: nguoiDungId.id }, // Điều kiện tìm kiếm
+            attributes: ['NguoiDungId', 'TenDangNhap', 'Account', 'DiaChi', 'SoDienThoai', 'VaiTro'] // Lấy các trường cần thiết
+        });
+        // return res.json({ 'check': user })
+
+        // Kiểm tra xem người dùng có tồn tại không
+        if (!user) {
+            return res.status(201).json({ warning: 'Người dùng không tồn tại' }); // Nếu không tìm thấy người dùng
+        }
+
+        return res.status(200).json(user); // Trả kết quả về cho client
+
+    } catch (error) {
+        return res.status(500).json({ error: 'Lỗi truy vấn cơ sở dữ liệu', message: error.message }); // Xử lý lỗi nếu có
     }
 };
 
@@ -308,4 +332,4 @@ const updateUserNDSDT = async (req, res) => {
     }
 };
 
-module.exports = { getUsers, createUser, loginUser, deleteUser, deleteUsers, updateUser, checkLogin, logoutUser, updateUserNDSDT };
+module.exports = { getUsers, getUserById, createUser, loginUser, deleteUser, deleteUsers, updateUser, checkLogin, logoutUser, updateUserNDSDT };
