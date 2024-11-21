@@ -1,7 +1,10 @@
 // models/DonHangDaDangNhap.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+
 const ChiTietDonHangDaDangNhap = require('./ChiTietDonHangDaDangNhap');
+const User = require('./userModel');
+const ThanhToan = require('./thanhtoanModel');
 
 const DonHangDaDangNhap = sequelize.define('DonHangDaDangNhap', {
   DonHangId: {
@@ -18,7 +21,7 @@ const DonHangDaDangNhap = sequelize.define('DonHangDaDangNhap', {
     allowNull: false,
   },
   TrangThai: {
-    type: DataTypes.ENUM('dangxu ly', 'hoantat', 'huy'),
+    type: DataTypes.ENUM('dangxu ly', 'Chờ Giao Hàng', 'Đang Giao', 'Hoàn Thành', 'Hủy'),
     defaultValue: 'dangxu ly',
   },
   ThoiGianTao: {
@@ -35,5 +38,10 @@ DonHangDaDangNhap.hasMany(ChiTietDonHangDaDangNhap, {
   foreignKey: 'DonHangId',
   onDelete: 'CASCADE',
 });
+DonHangDaDangNhap.hasMany(ThanhToan, {
+  foreignKey: 'DonHangId',
+  onDelete: 'CASCADE',
+});
 
+DonHangDaDangNhap.belongsTo(User, { foreignKey: 'NguoiDungId', onDelete: 'CASCADE', });
 module.exports = DonHangDaDangNhap;

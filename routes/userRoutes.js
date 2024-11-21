@@ -1,6 +1,6 @@
 const express = require('express');
 const userRouter = express.Router();
-const { updateUser, deleteUser, checkLogin, logoutUser, createUser, deleteUsers, getUsers, updateUserNDSDT, getUserById } = require('../controllers/userController');
+const { updateUser, deleteUser, checkLogin, logoutUser, createUser, deleteUsers, getUsers, updateUserNDSDT, getUserById, updateUserSDT, updateUserDiaChi } = require('../controllers/userController');
 
 userRouter.get('/', async (req, res) => {
     return await getUsers(req, res);
@@ -17,11 +17,21 @@ userRouter.post('/', async (req, res) => {
 userRouter.put('/:nguoiDungId', async (req, res) => {
     return await updateUser(req, res);
 });
+
+userRouter.put('/update/sdt', async (req, res) => {
+    return await updateUserSDT(req, res);
+});
+
+userRouter.put('/update/diachi', async (req, res) => {
+    return await updateUserDiaChi(req, res);
+});
+
 // Sửa thông tin người dùng
 // router.put('/users/ndsdt/:nguoiDungId', updateUserNDSDT); //
 userRouter.put('/ndsdt/:nguoiDungId', async (req, res) => {
     return await updateUserNDSDT(req, res);
 });
+
 userRouter.delete('/:nguoiDungId', async (req, res) => {
     return await deleteUser(req, res);
 });

@@ -277,6 +277,7 @@ const logoutUser = async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
 };
+
 const updateUserNDSDT = async (req, res) => {
     const { nguoiDungId } = req.params; // Lấy nguoiDungId từ tham số URL
     const { TenDangNhap, MatKhau, Account, DiaChi, SoDienThoai, VaiTro } = req.body; // Lấy dữ liệu người dùng từ body
@@ -332,4 +333,60 @@ const updateUserNDSDT = async (req, res) => {
     }
 };
 
-module.exports = { getUsers, getUserById, createUser, loginUser, deleteUser, deleteUsers, updateUser, checkLogin, logoutUser, updateUserNDSDT };
+const updateUserSDT = async (req, res) => {
+    const token = req.session.user;
+    const NguoiDungId = verifyToken(token);
+    const { SoDienThoai } = req.body;
+
+    // return res.status(200).json({ message: NguoiDungId.id });
+    try {
+        const user = await User.findOne({
+            where: { NguoiDungId: NguoiDungId.id }
+        });
+
+        if (!user) {
+            return res.status(201).json({ warning: 'Tải khoản không tồn tại.' }); // Nếu không tìm thấy người dùng
+        }
+
+        const updatedUser = await User.update({
+            SoDienThoai
+        },
+            {
+                where: { NguoiDungId: NguoiDungId.id },
+            });
+        return res.status(200).json({ message: 'Số điện thoại đã được cập nhật thành công!', updatedUser });
+
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+}
+
+const updateUserDiaChi = async (req, res) => {
+    const token = req.session.user;
+    const NguoiDungId = verifyToken(token);
+    const { DiaChi } = req.body;
+
+    // return res.status(200).json({ message: NguoiDungId.id });
+    try {
+        const user = await User.findOne({
+            where: { NguoiDungId: NguoiDungId.id }
+        });
+
+        if (!user) {
+            return res.status(201).json({ warning: 'Tải khoản không tồn tại.' }); // Nếu không tìm thấy người dùng
+        }
+
+        const updatedUser = await User.update({
+            DiaChi
+        },
+            {
+                where: { NguoiDungId: NguoiDungId.id },
+            });
+        return res.status(200).json({ message: 'Địa chỉ đã được cập nhật thành công!', updatedUser });
+
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports = { getUsers, getUserById, createUser, loginUser, deleteUser, deleteUsers, updateUser, checkLogin, logoutUser, updateUserNDSDT, updateUserSDT, updateUserDiaChi };
