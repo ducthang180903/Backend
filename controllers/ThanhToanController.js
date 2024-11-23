@@ -26,6 +26,7 @@ const getThanhToanById = async (req, res) => {
 const createThanhToan = async (req, res) => {
     const { DonHangId, PhuongThuc, TrangThaiThanhToan, ThoiGianTao } = req.body; // Lấy dữ liệu từ body của request
     const data = { DonHangId, PhuongThuc, TrangThaiThanhToan, ThoiGianTao }; // Định dạng lại dữ liệu trước khi gửi vào service
+    // return res.json({ data })
     try {
         const newThanhToan = await ThanhToanService.createThanhToan(data); // Gọi service để tạo mới thanh toán
         res.status(200).json(newThanhToan); // Trả về thanh toán mới tạo với mã trạng thái 201 (Created)

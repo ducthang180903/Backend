@@ -22,7 +22,7 @@ exports.createDonHang = async (req, res) => {
 
     // Nếu không có cảnh báo, trả về thông báo thành công
     return res.status(200).json({
-      success: donHangResult.success,
+      message: donHangResult.success,
       donHang: donHangResult.donHang,
     });
 
@@ -39,10 +39,10 @@ exports.createChiTietDonHang = async (req, res) => {
   try {
     const { DonHangId, SanPhamId, ChiTietSanPhamId, SoLuong, Gia } = req.body;
     const chiTiet = await donHangService.createChiTietDonHang(DonHangId, SanPhamId, ChiTietSanPhamId, SoLuong, Gia);
-    res.status(201).json({ success: true, chiTiet });
+    res.status(200).json({ success: true, chiTiet });
   } catch (error) {
     console.error('Error creating chi tiet don hang:', error);
-    res.status(201).json({ success: false, message: 'Server error' });
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -72,6 +72,7 @@ exports.getChiTietDonHangByDonHangId = async (req, res) => {
     res.status(201).json({ success: false, message: 'Server error' });
   }
 };
+
 exports.getDonHangByall0 = async (req, res) => {
   try {
     // Gọi service để lấy tất cả đơn hàng
@@ -102,13 +103,14 @@ exports.getDonHangByall0 = async (req, res) => {
     return res.status(500).json({ warning: 'Đã có lỗi xảy ra khi lấy đơn hàng' });
   }
 };
+
 exports.updateOrderStatus = async (req, res) => {
   try {
     const DonHangId = req.params.DonHangId; // Lấy DonHangId từ URL
     const { TrangThai } = req.body;  // Lấy trạng thái mới từ body
 
     if (!DonHangId || !TrangThai) {
-      return res.status(201).json({ message: 'Thiếu DonHangId hoặc trạng thái mới' });
+      return res.status(201).json({ warning: 'Thiếu DonHangId hoặc trạng thái mới' });
     }
 
     // Gọi service để cập nhật trạng thái đơn hàng

@@ -9,6 +9,8 @@ const SanPham = require('../models/productModel');
 const ChiTietSanPham = require('../models/chitietsanphamModels');
 const HinhAnhSanPham = require('../models/imgproductModel');
 const ThanhToan = require('../models/thanhtoanModel');
+const moment = require('moment-timezone');
+
 
 exports.createDonHang = async (NguoiDungId, TongTien, TrangThai, chiTietSanPhamList) => {
   try {
@@ -61,7 +63,7 @@ exports.createDonHang = async (NguoiDungId, TongTien, TrangThai, chiTietSanPhamL
 
     // Trả về thông báo thành công và thông tin đơn hàng
     return {
-      message: 'Thanh Toán thành công!',
+      success: 'Thanh Toán thành công!',
       donHang,
       status: 200,
     };
@@ -206,7 +208,8 @@ exports.getDonHangById = async (DonHangId) => {
 
       ],
     });
-
+    const ThoiGiaTao = moment(donHang.ThoiGianTao).tz('Asia/Ho_Chi_Minh').format('HH:mm:ss DD-MM-YYYY');
+    // return ThoiGiaTao;
     if (!donHang) {
       return { message: 'Không tìm thấy đơn hàng', status: 404 };
     }
@@ -236,7 +239,6 @@ exports.getDonHangById = async (DonHangId) => {
       Gia: detail.ChiTietSanPham.Gia,
       SoLuong: detail.SoLuong,
       HinhAnhSanPham: detail.SanPham.HinhAnhSanPhams.map(img => img.DuongDanHinh),
-
     }));
 
     // Thêm thông tin người dùng và tổng tiền vào kết quả trả về
@@ -246,6 +248,7 @@ exports.getDonHangById = async (DonHangId) => {
       SoDienThoai: user.SoDienThoai,
       TongTien: donHang.TongTien,
       TrangThai: donHang.TrangThai,
+      ThoiGiaTao: ThoiGiaTao
     });
     result.push({
       PhuongThuc: pay.PhuongThuc,
