@@ -120,7 +120,7 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(404).json(result);
     }
 
-    return res.status(result.status).json(result); // Trả về mã trạng thái và kết quả từ service
+    return res.status(200).json(result); // Trả về mã trạng thái và kết quả từ service
   } catch (error) {
     console.error('Lỗi khi xử lý request:', error);
     return res.status(500).json({ message: 'Đã xảy ra lỗi' });

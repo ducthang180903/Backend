@@ -1,6 +1,6 @@
 const express = require('express');
 const productRouter = express.Router();
-const { getproduct, postproduct, putproduct, deleteproduct, deleteproducts,searchProducts,getProductById } = require('../controllers/productController');
+const { getproduct, postproduct, putproduct, deleteproduct, deleteproducts, searchProducts, getProductById } = require('../controllers/productController');
 const upload = require('../config/multerConfig');
 
 productRouter.get('/sanpham', async (req, res) => {

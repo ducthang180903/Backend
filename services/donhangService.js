@@ -293,7 +293,6 @@ exports.updateOrderStatus = async (DonHangId, TrangThai) => {
     return {
       message: 'Cập nhật trạng thái thành công',
       order: updatedOrder[1][0],
-      status: 200
     };
   } catch (error) {
     console.error('Lỗi khi cập nhật trạng thái đơn hàng:', error);
