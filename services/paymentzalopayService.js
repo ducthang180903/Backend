@@ -48,7 +48,7 @@ const createOrder = async (amount, items) => {
 
     // Dữ liệu bổ sung, như URL chuyển hướng sau khi thanh toán xong
     const embed_data = {
-        redirecturl: 'http://localhost:3000/gio-hang',  // URL sau khi thanh toán xong
+        redirecturl: 'http://localhost:3000/thong-tin/gio-hang',  // URL sau khi thanh toán xong
     };
 
     // Đối tượng order chứa thông tin giao dịch

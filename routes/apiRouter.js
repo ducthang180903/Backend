@@ -1,5 +1,4 @@
 const express = require('express');
-const userRouter = require('./userRoutes');
 const productRouter = require('./productRoutes');
 
 const loginsignupRouter = require('./loginsignupRouter');
@@ -11,10 +10,14 @@ const paymentzalo = require('./paymentRountZalo');
 const ThanhToan = require('./ThanhToanRoutes');
 const chitietsanphamRoutes = require('./chitietsanphamRoutes');
 const { isAdmin, isManager, checkLogin } = require('../middlewares/authMiddleware');
+const userAuthen = require('./userAuthen');
+const userRoutes = require('./userRoutes');
 const apiRouter = express.Router();
 
 apiRouter.use('/', loginsignupRouter);
-apiRouter.use('/user', isManager, isAdmin, userRouter);
+apiRouter.use('/user', checkLogin, userRoutes);
+apiRouter.use('/user', checkLogin, isManager, isAdmin, userAuthen);
+
 // apiRouter.use('/loaisanpham', producttypeRoutes);
 apiRouter.use('/', productRouter);
 apiRouter.use('/', producttypeRoutes);

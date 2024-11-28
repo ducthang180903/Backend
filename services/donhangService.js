@@ -13,6 +13,7 @@ const moment = require('moment-timezone');
 
 
 exports.createDonHang = async (NguoiDungId, TongTien, TrangThai, chiTietSanPhamList) => {
+
   try {
     // Kiểm tra người dùng trong bảng NguoiDung
     const nguoiDung = await NguoiDung.findOne({
@@ -26,13 +27,14 @@ exports.createDonHang = async (NguoiDungId, TongTien, TrangThai, chiTietSanPhamL
 
     // Kiểm tra nếu người dùng chưa cung cấp đầy đủ thông tin (Địa chỉ và Số điện thoại)
     if (!nguoiDung.DiaChi || !nguoiDung.SoDienThoai) {
-      return { warning: 'Người dùng chưa cung cấp đầy đủ thông tin (Địa chỉ và Số điện thoại)', status: 201 };
+      return { warning: 'Bạn chưa cung cấp đầy đủ thông tin (Địa chỉ và Số điện thoại)', status: 201 };
     }
 
     // Tạo đơn hàng
     const donHang = await DonHangDaDangNhap.create({
       NguoiDungId,
       TongTien,
+      TrangThai
       // Có thể thêm trạng thái đơn hàng ở đây nếu cần
     });
 

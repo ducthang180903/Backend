@@ -9,7 +9,7 @@ const getCart = async (req, res) => {
     const token = req.session.user;
     // return res.json({ token })
     if (!token) {
-        return res.status(401).json({
+        return res.status(201).json({
             warning: 'Người dùng chưa đăng nhập.',
             cartDetails: []
         });
@@ -27,7 +27,7 @@ const getCart = async (req, res) => {
             });
         }
 
-        return res.status(200).json(cartData?.cart);
+        return res.status(200).json(cartData?.cart || []);
     } catch (error) {
         return res.status(500).json({
             error: error.message || 'Có lỗi xảy ra trong quá trình xử lý.',

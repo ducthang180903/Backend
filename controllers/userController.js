@@ -288,7 +288,7 @@ const updateUserNDSDT = async (req, res) => {
         });
 
         if (!user) {
-            return res.status(404).json({ warning: 'Người dùng không tồn tại.' });
+            return res.status(201).json({ warning: 'Người dùng không tồn tại.' });
         }
 
         // Kiểm tra xem tên đăng nhập hoặc tài khoản đã tồn tại trong cơ sở dữ liệu không
@@ -297,7 +297,7 @@ const updateUserNDSDT = async (req, res) => {
                 where: { TenDangNhap, NguoiDungId: { [Op.ne]: nguoiDungId } }
             });
             if (existingUser) {
-                return res.status(400).json({ warning: 'Tên đăng nhập đã tồn tại.' });
+                return res.status(201).json({ warning: 'Tên đăng nhập đã tồn tại.' });
             }
         }
 
@@ -306,7 +306,7 @@ const updateUserNDSDT = async (req, res) => {
                 where: { Account, NguoiDungId: { [Op.ne]: nguoiDungId } }
             });
             if (existingAccount) {
-                return res.status(400).json({ warning: 'Tài khoản đã tồn tại.' });
+                return res.status(201).json({ warning: 'Tài khoản đã tồn tại.' });
             }
         }
 
@@ -328,7 +328,7 @@ const updateUserNDSDT = async (req, res) => {
 
         return res.status(200).json({ message: 'Người dùng đã được cập nhật thành công!', updatedData });
     } catch (error) {
-        return res.status(400).json({ message: error.message });
+        return res.status(error).json({ error: error.message });
     }
 };
 
