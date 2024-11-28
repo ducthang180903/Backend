@@ -280,7 +280,7 @@ const logoutUser = async (req, res) => {
 
 const updateUserNDSDT = async (req, res) => {
     const { nguoiDungId } = req.params; // Lấy nguoiDungId từ tham số URL
-    const { TenDangNhap, MatKhau, Account, DiaChi, SoDienThoai, VaiTro } = req.body; // Lấy dữ liệu người dùng từ body
+    const { TenDangNhap, MatKhau, Account, DiaChi, SoDienThoai } = req.body; // Lấy dữ liệu người dùng từ body
 
     try {
         const user = await User.findOne({
@@ -321,7 +321,6 @@ const updateUserNDSDT = async (req, res) => {
         if (MatKhau) updatedData.MatKhau = hashedPassword;
         if (TenDangNhap) updatedData.TenDangNhap = TenDangNhap;
         if (Account) updatedData.Account = Account;
-        if (VaiTro) updatedData.VaiTro = VaiTro;
 
         await User.update(updatedData, {
             where: { NguoiDungId: nguoiDungId },

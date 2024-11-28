@@ -28,7 +28,7 @@ userRouter.put('/update/diachi', async (req, res) => {
 
 // Sửa thông tin người dùng
 // router.put('/users/ndsdt/:nguoiDungId', updateUserNDSDT); //
-userRouter.put('/ndsdt/:nguoiDungId', async (req, res) => {
+userRouter.put('/tt/:nguoiDungId', async (req, res) => {
     return await updateUserNDSDT(req, res);
 });
 
