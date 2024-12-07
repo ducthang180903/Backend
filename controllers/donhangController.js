@@ -6,29 +6,19 @@ const chiTietDonHangService = require('../services/chiTietDonHangService');
 // Controller - donhangController.js
 // Controller - donhangController.js
 exports.createDonHang = async (req, res) => {
+  const { NguoiDungId, TongTien, TrangThai, chiTietSanPhamList } = req.body;
+
   try {
-    const { NguoiDungId, TongTien, TrangThai, chiTietSanPhamList } = req.body;
-
-    // Gọi service tạo đơn hàng
-    const donHangResult = await donHangService.createDonHang(NguoiDungId, TongTien, TrangThai, chiTietSanPhamList);
-
-    // Kiểm tra nếu trả về cảnh báo
-    if (donHangResult.warning) {
-      return res.status(201).json({
-        warning: donHangResult.warning,
-        donHang: null,
-      });
+    const result = await donHangService.createDonHang(NguoiDungId, TongTien, TrangThai, chiTietSanPhamList);
+    
+    if (result.status !== 200) {
+      return res.status(result.status).json({ message: result.warning });
     }
-
-    // Nếu không có cảnh báo, trả về thông báo thành công
-    return res.status(200).json({
-      message: donHangResult.success,
-      donHang: donHangResult.donHang,
-    });
-
+    
+    return res.status(result.status).json({ message: result.success, donHang: result.donHang });
   } catch (error) {
-
-    return res.status(201).json({ warning: 'Đã có lỗi xảy ra' });
+    console.error('Error in createDonHang controller:', error);
+    return res.status(500).json({ message: 'Lỗi hệ thống, vui lòng thử lại sau.' });
   }
 };
 

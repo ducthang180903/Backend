@@ -109,7 +109,8 @@ const getAllProducts = async () => {
             LoaiSanPhamId: productData.LoaiSanPhamId,
             DonViTinhID: productData.DonViTinhID,
             // Chỉ hiển thị HinhAnh
-            HinhAnh: productData.HinhAnhSanPhams
+            // HinhAnh: productData.HinhAnhSanPhams
+            HinhAnh: productData.HinhAnhSanPhams.map(image => `http://localhost:8000/api/${image.DuongDanHinh.replace(/\\/g, '/')}`),
         };
     });
 };
@@ -225,7 +226,8 @@ const getProductById = async (sanPhamId) => {
         ThoiGianCapNhat: productData.ThoiGianCapNhat,
         TenLoai: productData.LoaiSanPham ? productData.LoaiSanPham.TenLoai : null, // Lấy TenLoai từ mô hình LoaiSanPham
         TenDonVi: productData.DonViTinh ? productData.DonViTinh.TenDonVi : null,
-        HinhAnh: productData.HinhAnhSanPhams
+        // HinhAnh: productData.HinhAnhSanPhams
+        
     };
 };
 

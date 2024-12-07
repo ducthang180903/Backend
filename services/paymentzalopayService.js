@@ -4,7 +4,7 @@ const CryptoJS = require('crypto-js');
 const moment = require('moment');
 const qs = require('qs');
 const config = require('../config/zalopayconfig'); // Ensure config file has `app_id`, `key1`, `key2`, and `endpoint`
-
+const ChiTietSanPham = require('../models/chitietsanphamModels');
 // const createOrder = async (amount, items) => {
 //     const transID = Math.floor(Math.random() * 1000000); // ID ngẫu nhiên cho giao dịch
 //     const embed_data = {
@@ -48,7 +48,7 @@ const createOrder = async (amount, items) => {
 
     // Dữ liệu bổ sung, như URL chuyển hướng sau khi thanh toán xong
     const embed_data = {
-        redirecturl: 'http://localhost:3000/gio-hang',  // URL sau khi thanh toán xong
+        redirecturl: 'http://localhost:3000/thong-tin/gio-hang',  // URL sau khi thanh toán xong
     };
 
     // Đối tượng order chứa thông tin giao dịch
@@ -100,6 +100,7 @@ const createOrder = async (amount, items) => {
         throw new Error('Error creating ZaloPay order: ' + error.message);
     }
 };
+
 
 
 

@@ -14,7 +14,7 @@ const { isAdmin, isManager, checkLogin } = require('../middlewares/authMiddlewar
 const apiRouter = express.Router();
 
 apiRouter.use('/', loginsignupRouter);
-apiRouter.use('/user', isManager, isAdmin, userRouter);
+apiRouter.use('/user', userRouter);
 // apiRouter.use('/loaisanpham', producttypeRoutes);
 apiRouter.use('/', productRouter);
 apiRouter.use('/', producttypeRoutes);

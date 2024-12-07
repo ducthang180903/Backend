@@ -10,7 +10,7 @@ const ChiTietSanPham = require('../models/chitietsanphamModels');
 const HinhAnhSanPham = require('../models/imgproductModel');
 const ThanhToan = require('../models/thanhtoanModel');
 const moment = require('moment-timezone');
-
+const donhangService = require('../services/chiTietDonHangService');
 
 exports.createDonHang = async (NguoiDungId, TongTien, TrangThai, chiTietSanPhamList) => {
   try {
@@ -19,7 +19,6 @@ exports.createDonHang = async (NguoiDungId, TongTien, TrangThai, chiTietSanPhamL
       where: { NguoiDungId },
     });
 
-    // Kiểm tra nếu người dùng không tồn tại
     if (!nguoiDung) {
       return { warning: 'Người dùng không tồn tại', status: 201 };
     }
@@ -29,22 +28,39 @@ exports.createDonHang = async (NguoiDungId, TongTien, TrangThai, chiTietSanPhamL
       return { warning: 'Người dùng chưa cung cấp đầy đủ thông tin (Địa chỉ và Số điện thoại)', status: 201 };
     }
 
+    // Kiểm tra số lượng sản phẩm cho mỗi sản phẩm trong chiTietSanPhamList
+    for (const chiTiet of chiTietSanPhamList) {
+      const chiTietSanPham = await ChiTietSanPham.findOne({
+        where: { ChiTietSanPhamId: chiTiet.ChiTietSanPhamId },
+      });
+
+      // Nếu không tìm thấy sản phẩm hoặc số lượng không đủ
+  
+
+      if (chiTietSanPham.SoLuong < chiTiet.SoLuong) {
+        return { warning: `Không đủ số lượng sản phẩm:Số lượng còn lại: ${chiTietSanPham.SoLuong}`, status: 201 };
+      }
+    }
+
     // Tạo đơn hàng
     const donHang = await DonHangDaDangNhap.create({
       NguoiDungId,
       TongTien,
-      // Có thể thêm trạng thái đơn hàng ở đây nếu cần
+      TrangThai,
     });
 
     // Tạo chi tiết đơn hàng cho từng sản phẩm
     for (const chiTiet of chiTietSanPhamList) {
-      await ChiTietDonHangDaDangNhap.create({
-        DonHangId: donHang.DonHangId,
-        SanPhamId: chiTiet.SanPhamId,
-        ChiTietSanPhamId: chiTiet.ChiTietSanPhamId,
-        SoLuong: chiTiet.SoLuong,
-        Gia: chiTiet.Gia,
+      await donhangService.createChiTietDonHang(donHang.DonHangId, chiTiet.SanPhamId, chiTiet.ChiTietSanPhamId, chiTiet.SoLuong, chiTiet.Gia);
+      
+      // Cập nhật số lượng sản phẩm sau khi thêm vào đơn hàng
+      const chiTietSanPham = await ChiTietSanPham.findOne({
+        where: { ChiTietSanPhamId: chiTiet.ChiTietSanPhamId },
       });
+      await ChiTietSanPham.update(
+        { SoLuong: chiTietSanPham.SoLuong - chiTiet.SoLuong },
+        { where: { ChiTietSanPhamId: chiTiet.ChiTietSanPhamId } }
+      );
     }
 
     // Xóa sản phẩm khỏi giỏ hàng sau khi tạo đơn hàng thành công
@@ -61,7 +77,6 @@ exports.createDonHang = async (NguoiDungId, TongTien, TrangThai, chiTietSanPhamL
       }
     }
 
-    // Trả về thông báo thành công và thông tin đơn hàng
     return {
       success: 'Thanh Toán thành công!',
       donHang,
@@ -69,11 +84,11 @@ exports.createDonHang = async (NguoiDungId, TongTien, TrangThai, chiTietSanPhamL
     };
 
   } catch (error) {
-    // Xử lý lỗi nếu có
     console.error('Error creating don hang in service:', error);
     return { warning: error.message, status: 201 };
   }
 };
+
 
 exports.getDonHangByall = async (NguoiDungId) => {
   try {

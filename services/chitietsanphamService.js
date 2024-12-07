@@ -1,6 +1,7 @@
 const ChiTietSanPham = require('../models/chitietsanphamModels');
 const SanPham = require('../models/productModel'); // Chắc chắn rằng đường dẫn là đúng
 const HinhAnhSanPham = require('../models/imgproductModel');
+const DonViTinh = require('../models/donViTinhModel');
 
 // Hàm lấy tất cả chi tiết sản phẩm
 const getChiTietSanPham = async (sanPhamId) => {
@@ -42,6 +43,10 @@ const getAllChiTietSanPham = async () => {
                         {
                             model: HinhAnhSanPham, // Bao gồm thông tin từ mô hình HinhAnhSanPham
                             required: false, // Không bắt buộc phải có hình ảnh
+                        },
+                        {
+                            model: DonViTinh, // Bao gồm thông tin từ mô hình HinhAnhSanPham
+                            attributes: ['TenDonVi'],
                         },
                     ],
                 },
